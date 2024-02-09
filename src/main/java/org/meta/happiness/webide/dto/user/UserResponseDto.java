@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto {
+public class UserResponseDto {
     private Long id;
     private String nickname;
     private String email;
@@ -18,8 +18,8 @@ public class UserDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
     private LocalDateTime modifiedAt;
 
-    public static UserDto convertUserToDto(User user) {
-        return new UserDto(user.getId(),
+    public static UserResponseDto convertUserToDto(User user) {
+        return new UserResponseDto(user.getId(),
                 user.getNickname(),
                 user.getEmail(),
                 user.getCreatedDate(),
