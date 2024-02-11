@@ -1,9 +1,7 @@
 package org.meta.happiness.webide.entity.groupuser;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.meta.happiness.webide.entity.repo.Repo;
@@ -15,6 +13,7 @@ import org.meta.happiness.webide.entity.user.User;
 public class GroupUser {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
     @ManyToOne
@@ -22,4 +21,9 @@ public class GroupUser {
 
     @ManyToOne
     private User user;
+
+    public GroupUser (Repo repo, User user){
+        this.repo = repo;
+        this.user = user;
+    }
 }
