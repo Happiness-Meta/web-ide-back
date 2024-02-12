@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.meta.happiness.webide.entity.user.User;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -15,14 +16,13 @@ import java.time.LocalDateTime;
 public class Repo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long id;
+    public String id;
 
     @ManyToOne
     private User creator;
 
     @CreationTimestamp
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime modifiedAt;
@@ -33,4 +33,21 @@ public class Repo {
     private String name;
 
     private String efsAccessPoint;
+
+    public static Repo createRepo(String name, Language programmingLanguage, User creator) {
+        Repo repo = new Repo();
+        repo.id = UUID.randomUUID().toString();
+        repo.creator = creator;
+        repo.programmingLanguage = programmingLanguage;
+        repo.name = name;
+        return repo;
+    }
+
+    public void setName(String name){
+        this.name = name;
+    }
+
+//    public void setAccessPointId(String accessPointId) {
+//        this.efsAccessPoint = accessPointId;
+//    }
 }
