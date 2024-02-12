@@ -1,4 +1,4 @@
-package org.meta.happiness.webide.repository.groupuser;
+package org.meta.happiness.webide.repository.userrepo;
 
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
