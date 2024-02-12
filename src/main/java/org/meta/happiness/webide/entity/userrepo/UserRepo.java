@@ -1,4 +1,4 @@
-package org.meta.happiness.webide.entity.groupuser;
+package org.meta.happiness.webide.entity.userrepo;
 
 
 import jakarta.persistence.*;
@@ -10,7 +10,7 @@ import org.meta.happiness.webide.entity.user.User;
 @Entity
 @Getter
 @NoArgsConstructor
-public class GroupUser {
+public class UserRepo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,7 +22,7 @@ public class GroupUser {
     @ManyToOne
     private User user;
 
-    public GroupUser (Repo repo, User user){
+    public UserRepo(Repo repo, User user){
         this.repo = repo;
         this.user = user;
     }

@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
-import org.meta.happiness.webide.entity.groupuser.GroupUser;
+import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
-import org.meta.happiness.webide.repository.groupuser.GroupUserRepository;
+import org.meta.happiness.webide.repository.groupuser.UserRepoRepository;
 import org.meta.happiness.webide.repository.repo.RepoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RepoService {
 
     private final RepoRepository repoRepository;
-    private final GroupUserRepository groupUserRepository;
+    private final UserRepoRepository userRepoRepository;
 
     @Transactional
     public RepoDto createRepository(RepoCreateRequestDto repoCreateRequestDto, User creator) {
@@ -33,7 +33,7 @@ public class RepoService {
         // TODO: S3 사용 시 -> 파일 변환 로직 + access point
 
         repoRepository.save(repo);
-        groupUserRepository.save(new GroupUser(repo, creator));
+        userRepoRepository.save(new UserRepo(repo, creator));
 
         return RepoDto.of(repo);
     }
