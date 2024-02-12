@@ -13,13 +13,16 @@ import org.meta.happiness.webide.entity.user.User;
 public class UserRepo {
 
     @Id
+    @Column(name = "userrepo_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
     @ManyToOne
+    @JoinColumn(name = "repo_id")
     private Repo repo;
 
     @ManyToOne
+    @JoinColumn(name = "user_id")
     private User user;
 
     public UserRepo(Repo repo, User user){

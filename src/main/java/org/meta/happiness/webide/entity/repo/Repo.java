@@ -16,9 +16,11 @@ import java.util.UUID;
 public class Repo {
 
     @Id
+    @Column(name = "repo_id")
     public String id;
 
     @ManyToOne
+    @JoinColumn(name = "user_id")
     private User creator;
 
     @CreationTimestamp
