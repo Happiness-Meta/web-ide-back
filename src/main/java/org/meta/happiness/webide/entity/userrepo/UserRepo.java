@@ -17,9 +17,11 @@ public class UserRepo {
     public Long id;
 
     @ManyToOne
+    @JoinColumn(name = "repo_id")
     private Repo repo;
 
     @ManyToOne
+    @JoinColumn(name = "user_id")
     private User user;
 
     public UserRepo(Repo repo, User user){

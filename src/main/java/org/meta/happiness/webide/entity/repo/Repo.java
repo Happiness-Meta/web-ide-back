@@ -5,27 +5,25 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.meta.happiness.webide.dto.repo.RepoCreateRequest;
+import org.meta.happiness.webide.entity.BaseTimeEntity;
 import org.meta.happiness.webide.entity.user.User;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Getter
 @NoArgsConstructor
-public class Repo {
+public class Repo extends BaseTimeEntity {
 
     @Id
-    public String id;
+    @Column(name = "repo_id")
+    @GeneratedValue
+    public Long id;
 
     @ManyToOne
+    @JoinColumn(name = "user_id")
     private User creator;
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime modifiedAt;
 
     @Enumerated(EnumType.STRING)
     private Language programmingLanguage;
@@ -34,12 +32,11 @@ public class Repo {
 
     private String efsAccessPoint;
 
-    public static Repo createRepo(String name, Language programmingLanguage, User creator) {
+    public static Repo createRepo(RepoCreateRequest request, User creator) {
         Repo repo = new Repo();
-        repo.id = UUID.randomUUID().toString();
-        repo.creator = creator;
-        repo.programmingLanguage = programmingLanguage;
-        repo.name = name;
+        repo.creator =creator;
+        repo.programmingLanguage = request.getProgrammingLanguage();
+        repo.name = request.getName();
         return repo;
     }
 
