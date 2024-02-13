@@ -3,7 +3,7 @@ package org.meta.happiness.webide.service.repo;
 
 import lombok.RequiredArgsConstructor;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
-import org.meta.happiness.webide.dto.repo.RepoDto;
+import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
@@ -21,21 +21,18 @@ public class RepoService {
     private final UserRepoRepository userRepoRepository;
 
     @Transactional
-    public RepoDto createRepository(RepoCreateRequestDto repoCreateRequestDto, User creator) {
+    public RepoResponseDto createRepository(RepoCreateRequestDto request, User creator) {
 
-        Repo repo = Repo.createRepo(
-                repoCreateRequestDto.getName(),
-                repoCreateRequestDto.getProgrammingLanguage(),
-                creator
-        );
+        Long creatorUserId = creator.getId();
+        Repo repo = Repo.createRepo(request, creator);
+        Repo savedRepo = repoRepository.save(repo);
 
-        // TODO: EFS 사용 시 -> 엑세스 포인트 생성
-        // TODO: S3 사용 시 -> 파일 변환 로직 + access point
-
-        repoRepository.save(repo);
         userRepoRepository.save(new UserRepo(repo, creator));
 
-        return RepoDto.of(repo);
+//        return RepoDto.of(repo);
+        return new RepoResponseDto(savedRepo.getId(), creatorUserId,
+                savedRepo.getName(), savedRepo.getProgrammingLanguage(),
+                savedRepo.getCreatedDate(), savedRepo.getLastModifiedDate());
     }
 
     @Transactional
