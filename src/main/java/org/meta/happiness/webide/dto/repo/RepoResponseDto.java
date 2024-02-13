@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.meta.happiness.webide.entity.repo.Language;
-import org.meta.happiness.webide.entity.user.User;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RepoResponseDto {
-    private Long id;
+    private String id;
     private Long createId;
     private String name;
     private Language programmingLanguage;

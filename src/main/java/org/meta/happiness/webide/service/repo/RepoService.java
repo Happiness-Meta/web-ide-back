@@ -2,9 +2,9 @@ package org.meta.happiness.webide.service.repo;
 
 
 import lombok.RequiredArgsConstructor;
-import org.meta.happiness.webide.dto.repo.RepoCreateRequest;
+import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
-import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequest;
+import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
@@ -21,19 +21,11 @@ public class RepoService {
     private final UserRepoRepository userRepoRepository;
 
     @Transactional
-    public RepoResponseDto createRepository(RepoCreateRequest request, User creator) {
+    public RepoResponseDto createRepository(RepoCreateRequestDto request, User creator) {
 
-//        Repo repo = Repo.createRepo(
-//                repoCreateRequestDto.getName(),
-//                repoCreateRequestDto.getProgrammingLanguage(),
-//                creator
-//        );
         Long creatorUserId = creator.getId();
         Repo repo = Repo.createRepo(request, creator);
         Repo savedRepo = repoRepository.save(repo);
-
-        // TODO: EFS 사용 시 -> 엑세스 포인트 생성
-        // TODO: S3 사용 시 -> 파일 변환 로직 + access point
 
         userRepoRepository.save(new UserRepo(repo, creator));
 
@@ -44,7 +36,7 @@ public class RepoService {
     }
 
     @Transactional
-    public void updateRepositoryName(String repoId, RepoUpdateNameRequest repoUpdateNameRequestDto){
+    public void updateRepositoryName(String repoId, RepoUpdateNameRequestDto repoUpdateNameRequestDto){
         Repo targetRepo = repoRepository.findById(repoId)
                 .orElseThrow(()-> new IllegalArgumentException("레포지토리가 존재하지 않음"));
 

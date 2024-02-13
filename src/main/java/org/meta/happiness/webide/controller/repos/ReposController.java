@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.meta.happiness.webide.dto.api.ApiResponse;
-import org.meta.happiness.webide.dto.repo.RepoCreateRequest;
-import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequest;
+import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
+import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.repostarter.RepoStarter;
 
@@ -68,7 +68,7 @@ public class ReposController {
     @PostMapping
     @Operation(summary = "신규 레포지토리 생성", description = "")
     public ApiResponse<?> createRepository(
-            @RequestBody RepoCreateRequest request,
+            @RequestBody RepoCreateRequestDto request,
             User user
 //            @AuthenticationPrincipal User user
     ) {
@@ -81,7 +81,7 @@ public class ReposController {
     public ApiResponse<Void> updateRepositoryName(
             @PathVariable("repoId") String repoId,
 //            @AuthenticationPrincipal User user,
-            @RequestBody RepoUpdateNameRequest request
+            @RequestBody RepoUpdateNameRequestDto request
     ) {
         repoService.updateRepositoryName(repoId, request);
         return ApiResponse.ok();

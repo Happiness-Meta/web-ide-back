@@ -3,13 +3,11 @@ package org.meta.happiness.webide.entity.repo;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.meta.happiness.webide.dto.repo.RepoCreateRequest;
+import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
 import org.meta.happiness.webide.entity.BaseTimeEntity;
 import org.meta.happiness.webide.entity.user.User;
 
-import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -18,8 +16,7 @@ public class Repo extends BaseTimeEntity {
 
     @Id
     @Column(name = "repo_id")
-    @GeneratedValue
-    public Long id;
+    public String id;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -32,9 +29,10 @@ public class Repo extends BaseTimeEntity {
 
     private String efsAccessPoint;
 
-    public static Repo createRepo(RepoCreateRequest request, User creator) {
+    public static Repo createRepo(RepoCreateRequestDto request, User creator) {
         Repo repo = new Repo();
-        repo.creator =creator;
+        repo.id = UUID.randomUUID().toString();
+        repo.creator = creator;
         repo.programmingLanguage = request.getProgrammingLanguage();
         repo.name = request.getName();
         return repo;
@@ -44,7 +42,7 @@ public class Repo extends BaseTimeEntity {
         this.name = name;
     }
 
-//    public void setAccessPointId(String accessPointId) {
-//        this.efsAccessPoint = accessPointId;
-//    }
+    public void createAccessPointId(String accessPointId) {
+        this.efsAccessPoint = accessPointId;
+    }
 }
