@@ -24,6 +24,7 @@ public class DirectoryController {
     ) {
 //        directoryService.createDirectory(containerId, directoryPath, request);
 //        return responseService.handleSingleResult();
+        return null;
     }
 
     @DeleteMapping("/{repoId}")
