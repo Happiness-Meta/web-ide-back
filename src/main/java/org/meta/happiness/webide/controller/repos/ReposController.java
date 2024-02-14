@@ -6,10 +6,13 @@ import lombok.RequiredArgsConstructor;
 import org.meta.happiness.webide.dto.api.ApiResponse;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
+import org.meta.happiness.webide.dto.response.SingleResult;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.repostarter.RepoStarter;
 
+import org.meta.happiness.webide.service.ResponseService;
 import org.meta.happiness.webide.service.repo.RepoService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,6 +32,8 @@ public class ReposController {
 
     private final RepoStarter repoStarter;
     private final RepoService repoService;
+
+    private final ResponseService responseService;
 
 
     @GetMapping
@@ -67,13 +72,12 @@ public class ReposController {
 
     @PostMapping
     @Operation(summary = "신규 레포지토리 생성", description = "")
-    public ApiResponse<?> createRepository(
+    public SingleResult<?> createRepository(
             @RequestBody RepoCreateRequestDto request,
-            User user
-//            @AuthenticationPrincipal User user
+            @AuthenticationPrincipal User user
     ) {
 
-        return ApiResponse.ok(repoService.createRepository(request, user));
+        return responseService.handleSingleResult(repoService.createRepository(request, user));
     }
 
     @PatchMapping("/{repoId}")
