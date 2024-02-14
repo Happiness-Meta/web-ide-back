@@ -1,6 +1,7 @@
 package org.meta.happiness.webide.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -38,16 +39,17 @@ public class WebSecurityConfig {
                 //HttpServletRequest를 사용하는 요청들에 대한 접근제한을 설정하겠다.
                 .authorizeHttpRequests((authorize) ->
                         authorize
+                                // 정적 자원에 대한 접근 허용
+                                .requestMatchers(String.valueOf(PathRequest.toStaticResources().atCommonLocations())).permitAll()
+                                .requestMatchers("/","/css/**", "/js/**").permitAll()
                                 .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
-                                .requestMatchers(HttpMethod.GET,"/api/posts","/api/post/*",
-                                         "/api/users",
-                                         "/api/replies", "/api/replies/*","/api/reply/*").permitAll()
+                                .requestMatchers(HttpMethod.GET,"/api/posts","/api/post/*", "/api/users","/api/replies", "/api/replies/*","/api/reply/*").permitAll()
                                 .requestMatchers("/api/sign/**").permitAll()
-                                .anyRequest().authenticated()
-
-                ).exceptionHandling((handle)->
+//                                .anyRequest().authenticated()
+                                .anyRequest().permitAll()
+                )
+                .exceptionHandling((handle)->
                         handle.authenticationEntryPoint(jwtAuthEntryPoint))
-
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
