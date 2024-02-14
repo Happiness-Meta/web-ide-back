@@ -11,6 +11,8 @@ import org.meta.happiness.webide.dto.response.MultipleResult;
 import org.meta.happiness.webide.dto.response.Result;
 import org.meta.happiness.webide.dto.response.SingleResult;
 import org.meta.happiness.webide.dto.user.UserResponseDto;
+
+
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.repository.user.UserRepository;
@@ -19,9 +21,6 @@ import org.meta.happiness.webide.repostarter.RepoStarter;
 
 import org.meta.happiness.webide.service.ResponseService;
 import org.meta.happiness.webide.service.repo.RepoService;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,6 +44,7 @@ public class ReposController {
     private final RepoService repoService;
     private final ResponseService responseService;
 
+
     @PostMapping
     @Operation(summary = "신규 레포지토리 생성", description = "")
     public SingleResult<RepoResponseDto> createRepository(
@@ -63,6 +63,32 @@ public class ReposController {
 
         return responseService.handleSingleResult(repoService.findRepo(repoId, userId));
     }
+    
+    @GetMapping("/{userId}/all")
+    @Operation(summary = "사용자 전체 레포지토리 조회", description = "")
+    public ApiResponse<?> getAllRepositoryByUser(
+//            @PathVariable String projectId
+    ) {
+        return ApiResponse.ok();
+    }
+
+    @GetMapping("/{userId}/recent")
+    @Operation(summary = "사용자가 최근 사용한 레포지토리 조회(최대 2개)", description = "")
+    public ApiResponse<?> getRecentRepository(
+//            @PathVariable String projectId
+    ) {
+        return ApiResponse.ok();
+    }
+
+    @GetMapping("/{repoId}")
+    @Operation(summary = "개별 레포지토리 조회", description = "")
+    public ApiResponse<?> getRepository(
+//            @PathVariable String projectId
+    ) {
+
+        return ApiResponse.ok();
+    }
+
 
     @PatchMapping("/{repoId}")
     @Operation(summary = "레포지토리 이름 변경", description = "")

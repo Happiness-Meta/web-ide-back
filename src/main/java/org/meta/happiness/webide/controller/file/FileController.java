@@ -18,9 +18,10 @@ public class FileController {
     @PostMapping("/{repoId}")
     @Operation(summary = "파일 생성", description = "")
     public ApiResponse<?> createFiles(
-//            @PathVariable String projectId
-            Long parentId, String parentCode,
-            @RequestPart("files") MultipartFile[] files
+            @PathVariable("repoId") String repoId,
+            @RequestParam("filePath") String filePath,
+            @RequestBody CreateFileRequest request
+//            @RequestPart("files") MultipartFile[] files
     ) {
 
 
@@ -37,18 +38,23 @@ public class FileController {
     }
 
     @PutMapping("/{repoId}")
-    @Operation(summary = "파일 수정", description = "특정 파일, 특정 디렉토리가 한번에 추가되거나 삭제되어도 저장될 때 put으로 업데이트되면 한번에 변경될 것")
+    @Operation(summary = "파일 수정", description = "")
     public ApiResponse<?> modifyFiles(
-//            @PathVariable String projectId
+            @PathVariable("repoId") String repoId,
+            @RequestParam("filePath") String filePath,
+            @RequestBody UpdateFileRequest request
     ) {
-
+//        fileService.updateFile(repoId, filePath, request);
         return ApiResponse.ok();
     }
 
     @DeleteMapping("/{repoId}")
     @Operation(summary = "파일 삭제", description = "")
-    public ResponseEntity<?> deleteFiles(String filePath) {
-//        return fileComponent.delete(filePath);
+    public ResponseEntity<?> deleteFiles(
+            @PathVariable("repoId") String repoId,
+            @RequestParam("filePath") String filePath
+    ) {
+//        fileService.deleteFile(repoId, filePath);
         return null;
     }
 }
