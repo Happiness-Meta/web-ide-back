@@ -19,8 +19,8 @@ public class FileController {
     @Operation(summary = "파일 생성", description = "")
     public ApiResponse<?> createFiles(
             @PathVariable("repoId") String repoId,
-            @RequestParam("filePath") String filePath,
-            @RequestBody CreateFileRequest request
+            @RequestParam("filePath") String filePath
+//            @RequestBody CreateFileRequest request
 //            @RequestPart("files") MultipartFile[] files
     ) {
 
@@ -41,8 +41,8 @@ public class FileController {
     @Operation(summary = "파일 수정", description = "")
     public ApiResponse<?> modifyFiles(
             @PathVariable("repoId") String repoId,
-            @RequestParam("filePath") String filePath,
-            @RequestBody UpdateFileRequest request
+            @RequestParam("filePath") String filePath
+//            @RequestBody UpdateFileRequest request
     ) {
 //        fileService.updateFile(repoId, filePath, request);
         return ApiResponse.ok();

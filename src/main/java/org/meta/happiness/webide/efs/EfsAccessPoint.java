@@ -10,7 +10,7 @@ import software.amazon.awssdk.services.efs.model.CreateAccessPointResponse;
 @RequiredArgsConstructor
 public class EfsAccessPoint{
 
-    @Value("${aws.efs.file-system-id}")
+//    @Value("${aws.efs.file-system-id}")
     private String fileSystemId;
 
     private final EfsClient efsClient;
