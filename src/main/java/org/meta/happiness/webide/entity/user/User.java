@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.meta.happiness.webide.dto.user.UserRegisterDto;
 import org.meta.happiness.webide.entity.BaseTimeEntity;
+import org.meta.happiness.webide.entity.repo.Repo;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +14,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor
+@Table(name = "users")
 public class User extends BaseTimeEntity {
     @Id
     @Column(name = "user_id")

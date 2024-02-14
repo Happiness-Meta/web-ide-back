@@ -17,16 +17,18 @@ public class UserRepo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "repo_id")
     private Repo repo;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    public UserRepo(Repo repo, User user){
-        this.repo = repo;
-        this.user = user;
+    public static UserRepo addUserRepo(Repo repo, User user){
+        UserRepo userRepo = new UserRepo();
+        userRepo.repo = repo;
+        userRepo.user = user;
+        return userRepo;
     }
 }
