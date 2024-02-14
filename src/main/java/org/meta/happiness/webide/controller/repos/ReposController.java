@@ -63,14 +63,6 @@ public class ReposController {
 
         return responseService.handleSingleResult(repoService.findRepo(repoId, userId));
     }
-    
-    @GetMapping("/{userId}/all")
-    @Operation(summary = "사용자 전체 레포지토리 조회", description = "")
-    public ApiResponse<?> getAllRepositoryByUser(
-//            @PathVariable String projectId
-    ) {
-        return ApiResponse.ok();
-    }
 
     @GetMapping("/{userId}/recent")
     @Operation(summary = "사용자가 최근 사용한 레포지토리 조회(최대 2개)", description = "")
