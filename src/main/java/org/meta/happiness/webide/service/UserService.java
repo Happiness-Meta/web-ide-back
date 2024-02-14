@@ -24,7 +24,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     @Transactional
-    public UserResponseDto registerUser(UserRegisterDto form) {
+    public UserResponseDto
+    registerUser(UserRegisterDto form) {
         validateDuplicatedUser(form.getEmail(), form.getNickname());
         User user = User.createUser(form, passwordEncoder.encode(form.getPassword()),null);
         User savedUser = userRepository.save(user);
