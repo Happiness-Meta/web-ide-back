@@ -1,7 +1,6 @@
 package org.meta.happiness.webide.chat.controller;
 
 import org.meta.happiness.webide.chat.dto.ChatMessageDto;
-import org.meta.happiness.webide.chat.entity.ChatMessage;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;

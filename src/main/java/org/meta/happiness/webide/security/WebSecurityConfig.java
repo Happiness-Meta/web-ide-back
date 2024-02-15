@@ -40,7 +40,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests((authorize) ->
                         authorize
                                 // 정적 자원에 대한 접근 허용
-                                .requestMatchers(String.valueOf(PathRequest.toStaticResources().atCommonLocations())).permitAll()
+                                .requestMatchers("/ws/**", "/sub/**", "/pub/**").permitAll()
                                 .requestMatchers("/","/css/**", "/js/**").permitAll()
                                 .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET,"/api/posts","/api/post/*", "/api/users","/api/replies", "/api/replies/*","/api/reply/*").permitAll()
