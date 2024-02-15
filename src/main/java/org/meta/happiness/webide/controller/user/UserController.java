@@ -7,6 +7,7 @@ import org.meta.happiness.webide.dto.response.MultipleResult;
 import org.meta.happiness.webide.dto.response.SingleResult;
 import org.meta.happiness.webide.dto.user.*;
 import org.meta.happiness.webide.exception.EmailPatternException;
+import org.meta.happiness.webide.exception.PasswordPatternException;
 import org.meta.happiness.webide.security.JwtUtil;
 import org.meta.happiness.webide.service.ResponseService;
 import org.meta.happiness.webide.service.UserService;
@@ -31,7 +32,9 @@ public class UserController {
         if (bindingResult.hasFieldErrors("email"))  // request 단에서 넘어온 양식을 validation으로 check하고,
             //문제 있을 시 Exception을 던져줌 Exception은 ExceptionAdvice class에서 다루고 있음.
             throw new EmailPatternException();
-        if(bindingResult.hasFieldErrors("password")) throw new IllegalArgumentException("password 양식에 안맞음");
+        if(bindingResult.hasFieldErrors("password"))
+            throw new PasswordPatternException();
+
         return responseService.handleSingleResult(userService.registerUser(form));
     }
 

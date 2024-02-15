@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface UserRepoRepository extends JpaRepository<UserRepo, Long> {
     List<UserRepo> findByUser(User user);
 
+    Optional<UserRepo> findByUserAndRepo(User user, Repo repo);
+
     @Query("select r from Repo r join r.userRepoUsers ur where ur.user = : user")
     List<UserRepo> findAllRepoByUser(@Param("user") Optional<User> user);
 

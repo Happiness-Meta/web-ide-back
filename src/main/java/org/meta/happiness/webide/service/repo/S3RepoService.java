@@ -13,4 +13,8 @@ public class S3RepoService {
     public String createRepository(String repoName) {
         return repository.uploadRepo(repoName).orElseThrow(() -> new IllegalArgumentException("S3 container Upload Exception"));
     }
+
+    public void deleteRepository(String repositoryPath) {
+        repository.deleteRepoWithRepoPath(repositoryPath);
+    }
 }

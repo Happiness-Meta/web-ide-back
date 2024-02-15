@@ -6,12 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.meta.happiness.webide.entity.repo.Language;
 
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class RepoCreateRequestDto {
-    @NotBlank(message = "레포 이름은 필수 입력란입니다.")
-    private String name;
+public class RepoDeleteRequestDto {
     private String userEmail;
-    private Language programmingLanguage;
 }

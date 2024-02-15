@@ -2,9 +2,10 @@ package org.meta.happiness.webide.controller.directory;
 
 
 import lombok.RequiredArgsConstructor;
-import org.meta.happiness.webide.dto.directory.CreateDirectoryRequest;
+import org.meta.happiness.webide.dto.directory.CreateDirectoryRequestDto;
 import org.meta.happiness.webide.dto.response.SingleResult;
 import org.meta.happiness.webide.service.ResponseService;
+import org.meta.happiness.webide.service.directory.DirectoryService;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -15,16 +16,18 @@ public class DirectoryController {
 
     private final ResponseService responseService;
 
+    private final DirectoryService directoryService;
+
 
     @PostMapping("/{repoId}")
-    public SingleResult<Void> createDirectory(
+    public SingleResult<String> createDirectory(
             @PathVariable("repoId") String repoId,
-            @RequestParam("directoryPath") String directoryPath,
-            @RequestBody CreateDirectoryRequest request
+            @RequestParam("directoryPath") String directoryPath
+//            @RequestBody CreateDirectoryRequestDto request
     ) {
-//        directoryService.createDirectory(containerId, directoryPath, request);
-//        return responseService.handleSingleResult();
-        return null;
+        directoryService.createDirectory(repoId, directoryPath);
+        return responseService.handleSingleResult("Sucess");
+
     }
 
     @DeleteMapping("/{repoId}")

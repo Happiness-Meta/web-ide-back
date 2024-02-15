@@ -2,13 +2,16 @@ package org.meta.happiness.webide.service.repo;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
+import org.meta.happiness.webide.dto.repo.RepoDeleteRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.exception.RepoNotFoudException;
+import org.meta.happiness.webide.exception.UserNotFoundException;
 import org.meta.happiness.webide.repository.user.UserRepository;
 import org.meta.happiness.webide.repository.userrepo.UserRepoRepository;
 import org.meta.happiness.webide.repository.repo.RepoRepository;
@@ -20,14 +23,25 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RepoService {
 
     private final UserRepository userRepository;
     private final RepoRepository repoRepository;
     private final UserRepoRepository userRepoRepository;
 
+    private final S3RepoService s3RepoService;
+
+    public static final String DELIMITER = "/";
+
+    public static String createRepoPathPrefix(String repo) {
+        return ("repo" + DELIMITER + repo + DELIMITER);
+    }
+
     @Transactional
-    public RepoResponseDto createRepository(RepoCreateRequestDto request, User creator) {
+    public RepoResponseDto createRepository(RepoCreateRequestDto request) {
+        User creator = userRepository.findByEmail(request.getUserEmail())
+                .orElseThrow(UserNotFoundException::new);
 
         Repo repo = Repo.createRepo(request, creator);
         Repo savedRepo = repoRepository.save(repo);
@@ -35,24 +49,29 @@ public class RepoService {
         UserRepo userRepo = UserRepo.addUserRepo(repo, creator);
         UserRepo savedUserRepo = userRepoRepository.save(userRepo);
 
-        return new RepoResponseDto(savedRepo.getId(), creator,
-                savedRepo.getName(), savedRepo.getProgrammingLanguage(),
-                savedRepo.getCreatedDate(), savedRepo.getLastModifiedDate());
+        log.info("saved repo >>>>>> {}", savedRepo.getId());
+
+        s3RepoService.createRepository(
+                createRepoPathPrefix(savedRepo.getId())
+        );
+
+        return RepoResponseDto.builder()
+                .id(savedRepo.getId())
+                .build();
     }
 
-    public RepoResponseDto findRepo(String repoId, Long userId){
+    public RepoResponseDto findRepo(String repoId, Long userId) {
         // TODO: 들어온 user에게 권한이 있는지 확인해야 함..?
 
         return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new));
     }
 
     @Transactional
-    public RepoResponseDto updateRepositoryName(String repoId, RepoUpdateNameRequestDto request, User user){
+    public RepoResponseDto updateRepositoryName(String repoId, RepoUpdateNameRequestDto request, User user) {
         // TODO: 들어온 user에게 권한이 있는지 확인해야 함
 
         Repo targetRepo = repoRepository.findById(repoId)
-                .orElseThrow(()-> new IllegalArgumentException("레포지토리가 존재하지 않음"));
-
+                .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않음"));
 
 
         targetRepo.changeName(request.getUpdatedName());
@@ -60,17 +79,22 @@ public class RepoService {
     }
 
     @Transactional
-    public void deleteRepository(String repoId, User user) {
-        Long id = user.getId();
-        // TODO: 들어온 user에게 권한이 있는지 확인해야 함
-//        if(userRepoRepository.findByUser(user).equals(id)){
-//
-//        }
-
+    public void deleteRepository(String repoId, String email) {
+        User creator = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
         Repo repo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않습니다."));
 
+        UserRepo userRepo = userRepoRepository.findByUserAndRepo(creator, repo).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않음")
+        );
 
+        String repositoryPath = createRepoPathPrefix(repo.getId());
+        s3RepoService.deleteRepository(
+                repositoryPath
+        );
+
+        userRepoRepository.delete(userRepo);
         repoRepository.delete(repo);
     }
 
