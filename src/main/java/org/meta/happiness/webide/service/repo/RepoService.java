@@ -57,6 +57,10 @@ public class RepoService {
 
         return RepoResponseDto.builder()
                 .id(savedRepo.getId())
+                .name(savedRepo.getName())
+                .programmingLanguage(savedRepo.getProgrammingLanguage())
+                .createdAt(savedRepo.getCreatedDate())
+                .modifiedAt(savedRepo.getLastModifiedDate())
                 .build();
     }
 
@@ -84,6 +88,10 @@ public class RepoService {
                 .orElseThrow(UserNotFoundException::new);
         Repo repo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않습니다."));
+
+        if(!repo.getCreator().equals(creator)){
+            throw new IllegalArgumentException("프로젝트 생성자가 아님.");
+        }
 
         UserRepo userRepo = userRepoRepository.findByUserAndRepo(creator, repo).orElseThrow(
                 () -> new IllegalArgumentException("존재하지 않음")

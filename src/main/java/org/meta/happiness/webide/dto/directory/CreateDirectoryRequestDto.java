@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class CreateDirectoryRequestDto {
-    private String name;
+    private String directoryPath;
 }

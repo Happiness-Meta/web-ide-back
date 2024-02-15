@@ -22,10 +22,10 @@ public class DirectoryController {
     @PostMapping("/{repoId}")
     public SingleResult<String> createDirectory(
             @PathVariable("repoId") String repoId,
-            @RequestParam("directoryPath") String directoryPath
-//            @RequestBody CreateDirectoryRequestDto request
+//            @RequestParam("directoryPath") String directoryPath
+            @RequestBody CreateDirectoryRequestDto request
     ) {
-        directoryService.createDirectory(repoId, directoryPath);
+        directoryService.createDirectory(repoId, request.getDirectoryPath());
         return responseService.handleSingleResult("Sucess");
 
     }
