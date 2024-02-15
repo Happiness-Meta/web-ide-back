@@ -35,18 +35,17 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 //session을 사용하지 않으므로 disable 시킴
                 .sessionManagement(
-                        (sessionManage)->sessionManage.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        (sessionManage) -> sessionManage.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 //HttpServletRequest를 사용하는 요청들에 대한 접근제한을 설정하겠다.
                 .authorizeHttpRequests((authorize) ->
                         authorize
-                                // 정적 자원에 대한 접근 허용
                                 .requestMatchers("/ws/**", "/sub/**", "/pub/**").permitAll()
                                 .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
-                                .requestMatchers(HttpMethod.GET,"/api/posts","/api/post/*", "/api/users","/api/replies", "/api/replies/*","/api/reply/*").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/posts", "/api/post/*", "/api/users", "/api/replies", "/api/replies/*", "/api/reply/*").permitAll()
                                 .requestMatchers("/api/sign/**").permitAll()
                                 .anyRequest().authenticated()
                 )
-                .exceptionHandling((handle)->
+                .exceptionHandling((handle) ->
                         handle.authenticationEntryPoint(jwtAuthEntryPoint))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
