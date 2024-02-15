@@ -25,4 +25,14 @@ public class S3DirectoryService {
         }
         repository.putDirectoryPath(s3Path);
     }
+
+    public void deleteDirectory(String repo, String directoryPath) {
+        String s3Path = "repo" + DELIMITER + repo + DELIMITER + directoryPath;
+
+        if (!repository.isDirectoryExist(s3Path)){
+            throw new IllegalArgumentException("Directory가 없음");
+        }
+
+        repository.deleteDirectoryPath(s3Path);
+    }
 }

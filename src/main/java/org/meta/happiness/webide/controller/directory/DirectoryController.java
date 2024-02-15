@@ -31,13 +31,12 @@ public class DirectoryController {
     }
 
     @DeleteMapping("/{repoId}")
-    public SingleResult<Void> deleteDirectory(
+    public SingleResult<?> deleteDirectory(
             @PathVariable("repoId") String repoId,
             @RequestParam("directoryPath") String directoryPath
     ) {
-//        directoryService.deleteDirectory(repoId, directoryPath);
-//        return responseService.handleSingleResult();
-        return null;
+        directoryService.deleteDirectory(repoId, directoryPath);
+        return responseService.handleSingleResult("Sucess");
     }
 
     @PutMapping("/{repoId}")
