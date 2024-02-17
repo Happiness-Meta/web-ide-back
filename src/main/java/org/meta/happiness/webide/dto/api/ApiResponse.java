@@ -14,7 +14,7 @@ public class ApiResponse<T> {
      * ApiResponse 생성자
      * 인스턴스화는 오직 정적 팩토리 메소드를 통해서만 수행합니다.
      */
-    private ApiResponse(boolean success, String message, T results) {
+    public ApiResponse(boolean success, String message, T results) {
         this.success = success;
         this.message = message;
         this.results = results;
