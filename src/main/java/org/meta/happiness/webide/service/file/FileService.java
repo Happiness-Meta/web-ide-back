@@ -9,6 +9,7 @@ import org.meta.happiness.webide.repository.filemetadata.FileMetaDataRepository;
 import org.meta.happiness.webide.repository.repo.RepoRepository;
 import org.meta.happiness.webide.service.filemetadata.FileMetaDataService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class FileService {
 
     private final S3FileService s3fileService;
 
+
     public void createFile(String repoId, String filePath) {
         Repo repo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포지토리입니다."));
@@ -33,23 +35,23 @@ public class FileService {
         log.info("saved file path >>>>> {}", fileMetaData.getPath());
 
         s3fileService.createFilePath(repo.getId(), fileMetaData.getId());
-
-
     }
 
+    @Transactional
     public void updateFile(String repoId, UpdateFileRequest request) {
         Repo repo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포지토리입니다."));
 
         FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(repo, request.getOriginFilepath())
                 .orElseThrow(() -> new IllegalArgumentException("path 오류"));
-        fileMetaData.changePath(request.getOriginFilepath(), request.getNewFilepath());
+        fileMetaData = fileMetaData.changePath(request.getNewFilepath());
 
         log.info("update file originPath >>>>> {}", request.getOriginFilepath());
         log.info("update file newPath >>>>> {}", fileMetaData.getPath());
 
         s3fileService.updateFile(repo.getId(), fileMetaData.getId(), request.getContent());
     }
+
 
     public void deleteFile(String repoId, String filePath) {
         Repo repo = repoRepository.findById(repoId)

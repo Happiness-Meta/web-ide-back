@@ -4,15 +4,18 @@ package org.meta.happiness.webide.service.repo;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.meta.happiness.webide.dto.file.FileDto;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoDeleteRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
+import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.exception.RepoNotFoudException;
 import org.meta.happiness.webide.exception.UserNotFoundException;
+import org.meta.happiness.webide.repository.repo.S3RepoRepository;
 import org.meta.happiness.webide.repository.user.UserRepository;
 import org.meta.happiness.webide.repository.userrepo.UserRepoRepository;
 import org.meta.happiness.webide.repository.repo.RepoRepository;
@@ -33,6 +36,7 @@ public class RepoService {
     private final UserRepoRepository userRepoRepository;
 
     private final S3RepoService s3RepoService;
+    private final S3RepoRepository s3RepoRepository;
 
     private final JwtUtil jwtUtil;
 
@@ -96,9 +100,19 @@ public class RepoService {
     }
 
     @Transactional
-    public void deleteRepository(String repoId, String email) {
-        User creator = userRepository.findByEmail(email)
+    public void deleteRepository(String repoId, HttpServletRequest servletRequest) {
+
+        String token = servletRequest.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        String userEmail = jwtUtil.getEmailFromToken(token);
+        log.info("EMAIL >>>>>>>>>>>>>> {}", userEmail);
+
+        User creator = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
+
         Repo repo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않습니다."));
 
@@ -159,5 +173,25 @@ public class RepoService {
 //                .map(RepoResponseDto::convertRepoToDto)
 //                .collect(Collectors.toList());
 //    }
+
+    public List<FileDto> getAllfilesFromRepo(String repoId){
+        Repo targetRepo = repoRepository.findById(repoId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포"));
+        List<FileMetaData> s3files = targetRepo.getS3fileMetadata();
+
+        return s3files.stream()
+                .map((fileMetaData -> {
+                    log.info(fileMetaData.getId());
+                    return toFileResponse(repoId, fileMetaData);
+                }))
+                .toList();
+    }
+
+    private FileDto toFileResponse(String repoId, FileMetaData metaData) {
+        return FileDto.builder()
+                .filePath(metaData.getPath())
+                .content(s3RepoRepository.getFileContent(repoId, metaData.getId()))
+                .build();
+    }
 
 }

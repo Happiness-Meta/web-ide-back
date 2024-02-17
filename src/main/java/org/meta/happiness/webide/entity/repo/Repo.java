@@ -38,7 +38,7 @@ public class Repo extends BaseTimeEntity {
     private List<UserRepo> userRepoUsers;
 
     @OneToMany(mappedBy = "repo", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FileMetaData> s3Entries = new ArrayList<>();
+    private List<FileMetaData> s3fileMetadata = new ArrayList<>();
 
     public static Repo createRepo(RepoCreateRequestDto request, User creator) {
         Repo repo = new Repo();

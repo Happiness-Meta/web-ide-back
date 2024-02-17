@@ -85,11 +85,11 @@ public class ReposController {
 
     @GetMapping("/{repoId}")
     @Operation(summary = "개별 레포지토리 조회", description = "")
-    public ApiResponse<?> getRepository(
-//            @PathVariable String projectId
+    public SingleResult<?> getRepository(
+            @PathVariable("repoId") String repoId
     ) {
 
-        return ApiResponse.ok();
+        return responseService.handleSingleResult(repoService.getAllfilesFromRepo(repoId));
     }
 
 
@@ -103,13 +103,13 @@ public class ReposController {
         return responseService.handleSingleResult(repoService.updateRepositoryName(repoId, request, user));
     }
 
-    @DeleteMapping("/{repoId}/{email}")
+    @DeleteMapping("/{repoId}")
     @Operation(summary = "레포지토리 삭제", description = "")
     public Result deleteRepository(
             @PathVariable("repoId") String repoId,
-            @PathVariable("email") String email
+            HttpServletRequest servletRequest
     ) {
-        repoService.deleteRepository(repoId, email);
+        repoService.deleteRepository(repoId, servletRequest);
         return responseService.handleSuccessResult();
 
     }

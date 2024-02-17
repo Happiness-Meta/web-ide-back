@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.meta.happiness.webide.entity.repo.Repo;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -32,8 +33,9 @@ public class FileMetaData {
         this.repo = repo;
     }
 
-    public FileMetaData changePath(String path, String newPath){
-        this.path = this.path.replace(path, newPath);
+    @Transactional
+    public FileMetaData changePath(String newPath){
+        this.path = newPath;
         return this;
     }
 }
