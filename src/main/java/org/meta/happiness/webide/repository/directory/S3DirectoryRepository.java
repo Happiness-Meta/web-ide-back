@@ -8,6 +8,8 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
+import java.util.List;
+
 @Repository
 @RequiredArgsConstructor
 @Slf4j
@@ -54,7 +56,7 @@ public class S3DirectoryRepository {
                     .build();
             s3Client.deleteObject(deleteRequest);
         } catch (Exception e) {
-            log.error("error message={}",e.getMessage());
+            log.error("error message={}", e.getMessage());
         }
     }
 
@@ -72,6 +74,49 @@ public class S3DirectoryRepository {
 
         } catch (Exception e) {
             log.error(e.getMessage());
+        }
+    }
+
+    public List<S3Object> getObjectsBy(String s3Path) {
+        ListObjectsV2Response listResponse = null;
+
+        try {
+            ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(s3Path)
+                    .build();
+
+            listResponse = s3Client.listObjectsV2(listRequest);
+
+        } catch (Exception e) {
+            log.error("error message={}", e.getMessage());
+        }
+        return listResponse.contents();
+    }
+
+    public void deleteObject(S3Object s3Object) {
+        try {
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(s3Object.key())
+                    .build();
+            s3Client.deleteObject(deleteRequest);
+        } catch (Exception e) {
+            log.error("error message={}", e.getMessage());
+        }
+    }
+
+    public void copyObject(S3Object s3Object, String newKey) {
+        try {
+            CopyObjectRequest copyRequest = CopyObjectRequest.builder()
+                    .sourceBucket(bucketName)
+                    .sourceKey(s3Object.key())
+                    .destinationBucket(bucketName)
+                    .destinationKey(newKey)
+                    .build();
+            s3Client.copyObject(copyRequest);
+        } catch (Exception e) {
+            log.error("error message={}", e.getMessage());
         }
     }
 }

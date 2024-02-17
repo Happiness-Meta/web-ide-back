@@ -3,6 +3,7 @@ package org.meta.happiness.webide.controller.directory;
 
 import lombok.RequiredArgsConstructor;
 import org.meta.happiness.webide.dto.directory.CreateDirectoryRequestDto;
+import org.meta.happiness.webide.dto.directory.DeleteDirectoryRequestDto;
 import org.meta.happiness.webide.dto.response.SingleResult;
 import org.meta.happiness.webide.service.ResponseService;
 import org.meta.happiness.webide.service.directory.DirectoryService;
@@ -30,23 +31,24 @@ public class DirectoryController {
 
     }
 
-    @DeleteMapping("/{repoId}")
+//    @DeleteMapping("/{repoId}")
+    @PostMapping("/delete-dir/{repoId}")
     public SingleResult<?> deleteDirectory(
             @PathVariable("repoId") String repoId,
-            @RequestParam("directoryPath") String directoryPath
+//            @RequestParam("directoryPath") String directoryPath
+            @RequestBody DeleteDirectoryRequestDto request
     ) {
-        directoryService.deleteDirectory(repoId, directoryPath);
+        directoryService.deleteDirectory(repoId, request.getDirectoryPath());
         return responseService.handleSingleResult("Sucess");
     }
 
     @PutMapping("/{repoId}")
-    public SingleResult<Void> updateDirectoryName(
+    public SingleResult<?> updateDirectoryName(
             @PathVariable("repoId") String repoId,
             @RequestParam("dirPath") String directoryPath,
             @RequestParam("newName") String newName
     ) {
-//        directoryService.updateDirectoryName(containerId, directoryPath, request);
-//        return responseService.handleSingleResult();
-        return null;
+        directoryService.updateDirectoryName(repoId, directoryPath, newName);
+        return responseService.handleSingleResult("Sucess");
     }
 }

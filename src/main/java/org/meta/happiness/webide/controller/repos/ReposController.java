@@ -57,11 +57,11 @@ public class ReposController {
     @PostMapping
     @Operation(summary = "신규 레포지토리 생성", description = "")
     public SingleResult<?> createRepository(
-            @RequestBody RepoCreateRequestDto request
-//            HttpServletRequest servletRequest
+            @RequestBody RepoCreateRequestDto request,
+            HttpServletRequest servletRequest
 //            @AuthenticationPrincipal UserDetailsImpl user
     ) {
-        return responseService.handleSingleResult(repoService.createRepository(request));
+        return responseService.handleSingleResult(repoService.createRepository(request, servletRequest));
     }
 
     //TODO: 지금은 creator만 조회가 가능하다.

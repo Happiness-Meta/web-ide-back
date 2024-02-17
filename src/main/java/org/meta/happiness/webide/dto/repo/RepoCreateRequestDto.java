@@ -12,6 +12,5 @@ import org.meta.happiness.webide.entity.repo.Language;
 public class RepoCreateRequestDto {
     @NotBlank(message = "레포 이름은 필수 입력란입니다.")
     private String name;
-    private String userEmail;
     private Language programmingLanguage;
 }

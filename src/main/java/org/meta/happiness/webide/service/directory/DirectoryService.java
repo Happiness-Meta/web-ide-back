@@ -32,4 +32,11 @@ public class DirectoryService {
 
         s3DirectoryService.deleteDirectory(repo.getId(), directoryPath);
     }
+
+    public void updateDirectoryName(String repoId, String directoryPath, String newDirectoryName) {
+        Repo repo = repoRepository.findById(repoId)
+                .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 레포지토리입니다."));
+
+        s3DirectoryService.updateDirectoryName(repo.getId(), directoryPath, newDirectoryName);
+    }
 }

@@ -1,6 +1,7 @@
 package org.meta.happiness.webide.service.repo;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
@@ -33,6 +34,8 @@ public class RepoService {
 
     private final S3RepoService s3RepoService;
 
+    private final JwtUtil jwtUtil;
+
     public static final String DELIMITER = "/";
 
     public static String createRepoPathPrefix(String repo) {
@@ -40,8 +43,17 @@ public class RepoService {
     }
 
     @Transactional
-    public RepoResponseDto createRepository(RepoCreateRequestDto request) {
-        User creator = userRepository.findByEmail(request.getUserEmail())
+    public RepoResponseDto createRepository(RepoCreateRequestDto request, HttpServletRequest servletRequest) {
+
+        String token = servletRequest.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        String userEmail = jwtUtil.getEmailFromToken(token);
+        log.info("EMAIL >>>>>>>>>>>>>> {}", userEmail);
+
+        User creator = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
 
         Repo repo = Repo.createRepo(request, creator);
@@ -90,7 +102,7 @@ public class RepoService {
         Repo repo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않습니다."));
 
-        if(!repo.getCreator().equals(creator)){
+        if (!repo.getCreator().equals(creator)) {
             throw new IllegalArgumentException("프로젝트 생성자가 아님.");
         }
 
