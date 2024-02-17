@@ -2,9 +2,12 @@ package org.meta.happiness.webide.controller.repos;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.api.ApiResponse;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
+import org.meta.happiness.webide.dto.repo.RepoDeleteRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.dto.response.MultipleResult;
@@ -19,6 +22,8 @@ import org.meta.happiness.webide.repository.user.UserRepository;
 import org.meta.happiness.webide.repository.userrepo.UserRepoRepository;
 import org.meta.happiness.webide.repostarter.RepoStarter;
 
+import org.meta.happiness.webide.security.JwtUtil;
+import org.meta.happiness.webide.security.UserDetailsImpl;
 import org.meta.happiness.webide.service.ResponseService;
 import org.meta.happiness.webide.service.repo.RepoService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,22 +43,28 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/repos")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Repository", description = "레포지토리 관련 API")
 public class ReposController {
 
     private final RepoService repoService;
     private final ResponseService responseService;
+    private final UserRepository userRepository;
+
+    private final JwtUtil jwtUtil;
 
 
     @PostMapping
     @Operation(summary = "신규 레포지토리 생성", description = "")
-    public SingleResult<RepoResponseDto> createRepository(
+    public SingleResult<?> createRepository(
             @RequestBody RepoCreateRequestDto request,
-            @AuthenticationPrincipal User user) {
-        return responseService.handleSingleResult(repoService.createRepository(request, user));
+            HttpServletRequest servletRequest
+//            @AuthenticationPrincipal UserDetailsImpl user
+    ) {
+        return responseService.handleSingleResult(repoService.createRepository(request, servletRequest));
     }
 
-//TODO: 지금은 creator만 조회가 가능하다.
+    //TODO: 지금은 creator만 조회가 가능하다.
     @GetMapping("/{userId}/{repoId}")
     @Operation(summary = "개별 레포지토리 조회", description = "")
     public SingleResult<RepoResponseDto> getRepository(
@@ -74,11 +85,11 @@ public class ReposController {
 
     @GetMapping("/{repoId}")
     @Operation(summary = "개별 레포지토리 조회", description = "")
-    public ApiResponse<?> getRepository(
-//            @PathVariable String projectId
+    public SingleResult<?> getRepository(
+            @PathVariable("repoId") String repoId
     ) {
 
-        return ApiResponse.ok();
+        return responseService.handleSingleResult(repoService.getAllfilesFromRepo(repoId));
     }
 
 
@@ -96,9 +107,9 @@ public class ReposController {
     @Operation(summary = "레포지토리 삭제", description = "")
     public Result deleteRepository(
             @PathVariable("repoId") String repoId,
-            @AuthenticationPrincipal User user
+            HttpServletRequest servletRequest
     ) {
-        repoService.deleteRepository(repoId, user);
+        repoService.deleteRepository(repoId, servletRequest);
         return responseService.handleSuccessResult();
 
     }

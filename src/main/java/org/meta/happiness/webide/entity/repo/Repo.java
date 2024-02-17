@@ -5,9 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
 import org.meta.happiness.webide.entity.BaseTimeEntity;
+import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +36,9 @@ public class Repo extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "repo", cascade = CascadeType.REMOVE)
     private List<UserRepo> userRepoUsers;
+
+    @OneToMany(mappedBy = "repo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FileMetaData> s3fileMetadata = new ArrayList<>();
 
     public static Repo createRepo(RepoCreateRequestDto request, User creator) {
         Repo repo = new Repo();
