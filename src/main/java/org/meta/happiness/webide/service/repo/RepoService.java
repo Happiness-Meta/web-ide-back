@@ -246,9 +246,13 @@ public class RepoService {
 
         return fileDto;
     }
-    public RepoInviteResponseDto findRepoInviteInfo(String repoId) {
-        Optional<Repo> findRepo = repoRepository.findById(repoId);
-        return RepoInviteResponseDto.convertRepoToInvite(findRepo.orElseThrow(RepoNotFoudException::new));
+    public RepoInviteResponseDto findRepoInviteInfo(String repoId, String userEmail) {
+        Repo findRepo = repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new);
+        if(!findRepo.getCreator().getEmail().equals(userEmail)){
+            throw new IllegalArgumentException("Creator 아님!");
+        }
+
+        return RepoInviteResponseDto.convertRepoToInvite(findRepo);
     }
 
 }

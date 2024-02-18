@@ -13,7 +13,7 @@ public class RepoInviteResponseDto {
     private String repoPassword;
 
     public static RepoInviteResponseDto convertRepoToInvite(Repo repo){
-        return new RepoInviteResponseDto("http://localhost:5173/dashboard/codePage/" + repo.getId(),
+        return new RepoInviteResponseDto("http://localhost:5173/codePage/" + repo.getId(),
                 repo.getPassword());
     }
 }

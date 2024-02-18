@@ -101,7 +101,7 @@ public class ReposController {
             @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable String repoId
     ){
-        return responseService.handleSingleResult(repoService.findRepoInviteInfo(repoId));
+        return responseService.handleSingleResult(repoService.findRepoInviteInfo(repoId, user.getUsername()));
     }
 
     @PostMapping("/invite/{repoId}")
