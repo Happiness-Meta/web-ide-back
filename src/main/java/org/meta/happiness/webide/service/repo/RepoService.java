@@ -7,6 +7,8 @@ import org.meta.happiness.webide.dto.file.FileDto;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
+import org.meta.happiness.webide.dto.response.RepoGetAllFilesResponse;
+import org.meta.happiness.webide.dto.response.RepoTreeResponse;
 import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
@@ -195,21 +197,40 @@ public class RepoService {
 //                .collect(Collectors.toList());
 //    }
 
-    public List<FileDto> getAllfilesFromRepo(String repoId){
+    @Transactional
+    public RepoGetAllFilesResponse getAllFilesFromRepo(String repoId){
         Repo targetRepo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포"));
         List<FileMetaData> s3files = targetRepo.getS3fileMetadata();
 
-        return s3files.stream()
+        if(s3files.isEmpty()){
+            return RepoGetAllFilesResponse.builder()
+                    .fileData(null)
+                    .treeData(null)
+                    .build();
+        }
+
+        List<FileDto> fileData = s3files.stream()
                 .map((fileMetaData -> {
                     log.info(fileMetaData.getId());
                     return toFileResponse(repoId, fileMetaData);
                 }))
                 .toList();
+//        List<String> s3Keys = fileData.stream().map(FileDto::getFilePath)
+//                        .toList();
+
+        RepoTreeResponse fileTree = RepoTreeResponse.buildTreeFromKeys(fileData);
+
+        return RepoGetAllFilesResponse.builder()
+                .fileData(fileData)
+                .treeData(fileTree)
+                .build();
     }
+
 
     private FileDto toFileResponse(String repoId, FileMetaData metaData) {
         FileDto fileDto = FileDto.builder()
+                .uuid(metaData.getId())
                 .filePath(metaData.getPath())
                 .content(s3RepoRepository.getFileContent(repoId, metaData.getId()))
                 .build();

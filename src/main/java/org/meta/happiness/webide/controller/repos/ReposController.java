@@ -84,7 +84,7 @@ public class ReposController {
             @PathVariable("repoId") String repoId
     ) {
 
-        return responseService.handleSingleResult(repoService.getAllfilesFromRepo(repoId));
+        return responseService.handleSingleResult(repoService.getAllFilesFromRepo(repoId));
     }
 
 

@@ -77,9 +77,10 @@ public class UserService {
     }
     //유저 정보 변경
     @Transactional
-    public UserResponseDto updateUser(Long userId, UserUpdateDto request) {
+    public UserResponseDto updateUser(String userEmail, UserUpdateDto request) {
+        User findUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
         validateDuplicatedNickname(request.getNickname());
-        User findUser = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         findUser.changeNickname(request.getNickname());
         findUser.changePassword(passwordEncoder.encode(request.getPassword()));
         return UserResponseDto.convertUserToDto(findUser);
