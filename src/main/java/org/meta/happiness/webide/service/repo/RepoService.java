@@ -1,39 +1,44 @@
 package org.meta.happiness.webide.service.repo;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.file.FileDto;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
+import org.meta.happiness.webide.dto.repo.RepoDeleteRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
-import org.meta.happiness.webide.exception.IsNotUserInviteRepo;
 import org.meta.happiness.webide.exception.RepoNotFoudException;
 import org.meta.happiness.webide.exception.UserNotFoundException;
 import org.meta.happiness.webide.repository.repo.S3RepoRepository;
 import org.meta.happiness.webide.repository.user.UserRepository;
 import org.meta.happiness.webide.repository.userrepo.UserRepoRepository;
 import org.meta.happiness.webide.repository.repo.RepoRepository;
+import org.meta.happiness.webide.security.JwtUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RepoService {
+
     private final UserRepository userRepository;
     private final RepoRepository repoRepository;
     private final UserRepoRepository userRepoRepository;
+
     private final S3RepoService s3RepoService;
     private final S3RepoRepository s3RepoRepository;
+
+    private final JwtUtil jwtUtil;
 
     public static final String DELIMITER = "/";
 
@@ -42,7 +47,15 @@ public class RepoService {
     }
 
     @Transactional
-    public RepoResponseDto createRepository(RepoCreateRequestDto request, String userEmail) {
+    public RepoResponseDto createRepository(RepoCreateRequestDto request, HttpServletRequest servletRequest) {
+
+        String token = servletRequest.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        String userEmail = jwtUtil.getEmailFromToken(token);
+        log.info("EMAIL >>>>>>>>>>>>>> {}", userEmail);
 
         User creator = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
@@ -68,45 +81,16 @@ public class RepoService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
-    public RepoResponseDto findRepo(Repo repo, String userEmail) {
+    public RepoResponseDto findRepo(String repoId, Long userId) {
+        // TODO: 들어온 user에게 권한이 있는지 확인해야 함..?
 
-        User findUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(UserNotFoundException::new);
-
-        Repo findRepo = repoRepository.findById(repo.getId())
-                .orElseThrow(RepoNotFoudException::new);
-
-        UserRepo userRepo = userRepoRepository.findByUserAndRepo(findUser, findRepo)
-                .orElseThrow(IsNotUserInviteRepo::new);
-
-        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repo.getId()).orElseThrow(RepoNotFoudException::new));
+        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new));
     }
 
     @Transactional
-    public void invite(String requestPassword, Repo repo, String userEmail){
-        User findUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(UserNotFoundException::new);
+    public RepoResponseDto updateRepositoryName(String repoId, RepoUpdateNameRequestDto request, User user) {
+        // TODO: 들어온 user에게 권한이 있는지 확인해야 함
 
-        Repo findRepo = repoRepository.findById(repo.getId())
-                .orElseThrow(RepoNotFoudException::new);
-
-        if(userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
-            return;
-        }
-
-        if(findRepo.getPassword().equals(requestPassword)) {
-            userRepoRepository.save(UserRepo.addUserRepo(findRepo, findUser));
-        }
-        else {
-            throw new IllegalArgumentException("repo의 비밀번호 불일치..");
-        }
-    }
-
-    @Transactional
-    public RepoResponseDto updateRepositoryName(String repoId, RepoUpdateNameRequestDto request, String userEmail) {
-        User creator = userRepository.findByEmail(userEmail)
-                .orElseThrow(UserNotFoundException::new);
         Repo targetRepo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않음"));
 
@@ -119,7 +103,15 @@ public class RepoService {
     }
 
     @Transactional
-    public void deleteRepository(String repoId, String userEmail) {
+    public void deleteRepository(String repoId, HttpServletRequest servletRequest) {
+
+        String token = servletRequest.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        String userEmail = jwtUtil.getEmailFromToken(token);
+        log.info("EMAIL >>>>>>>>>>>>>> {}", userEmail);
 
         User creator = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
@@ -145,11 +137,10 @@ public class RepoService {
     }
 
     @Transactional(readOnly = true)
-    public List<RepoResponseDto> findAllRepoByUser(String userEmail) {
-
+    public List<RepoResponseDto> findAllRepoByUser(Long userId) {
         // 1. 사용자 ID를 이용하여 해당 사용자를 데이터베이스에서 조회
-        User findUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("해당 userId를 찾을 수 없습니다." + userEmail));
+        User findUser = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 userId를 찾을 수 없습니다." + userId));
 
         // 2. 사용자가 참여한 모든 레포지토리를 데이터베이스에서 조회
         List<UserRepo> userRepos = userRepoRepository.findByUser(findUser);

@@ -49,7 +49,9 @@ public class ReposController {
 
     private final RepoService repoService;
     private final ResponseService responseService;
+
     private final UserRepository userRepository;
+    private final UserRepoRepository userRepoRepository;
 
     private final JwtUtil jwtUtil;
 
