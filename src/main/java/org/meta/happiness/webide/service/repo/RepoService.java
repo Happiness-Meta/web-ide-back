@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.file.FileDto;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoInviteResponseDto;
+
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.dto.response.RepoGetAllFilesResponse;
@@ -78,8 +79,10 @@ public class RepoService {
     @Transactional(readOnly = true)
     public RepoResponseDto findRepo(String repoId, String userEmail) {
 
+
         User findUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
+
 
         Repo findRepo = repoRepository.findById(repoId)
                 .orElseThrow(RepoNotFoudException::new);
