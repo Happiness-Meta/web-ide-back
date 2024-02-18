@@ -48,6 +48,12 @@ public class ExceptionAdvice {
         return responseService.handleFailResult(400, "email형식의 회원가입만 가능합니다.");
     }
 
+    @ExceptionHandler(PasswordPatternException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result failInputPassword() {
+        return responseService.handleFailResult(400, "대문자 1개와 특수문자 1개를 포함해야 합니다.");
+    }
+
     @ExceptionHandler(RefreshTokenException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result reLoginPlz(){

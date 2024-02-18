@@ -2,7 +2,13 @@ package org.meta.happiness.webide.controller.file;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.meta.happiness.webide.dto.api.ApiResponse;
+import org.meta.happiness.webide.dto.file.CreateFileRequest;
+import org.meta.happiness.webide.dto.file.UpdateFileRequest;
+import org.meta.happiness.webide.dto.response.SingleResult;
+import org.meta.happiness.webide.service.ResponseService;
+import org.meta.happiness.webide.service.file.FileService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,20 +18,22 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/files")
+@RequiredArgsConstructor
 @Tag(name = "File & Directory", description = "파일과 디렉토리 관련 API")
 public class FileController {
 
+    private final ResponseService responseService;
+    private final FileService fileService;
+
     @PostMapping("/{repoId}")
     @Operation(summary = "파일 생성", description = "")
-    public ApiResponse<?> createFiles(
+    public SingleResult<String> createFiles(
             @PathVariable("repoId") String repoId,
-            @RequestParam("filePath") String filePath
-//            @RequestBody CreateFileRequest request
+            @RequestBody CreateFileRequest request
 //            @RequestPart("files") MultipartFile[] files
     ) {
-
-
-        return ApiResponse.ok();
+        fileService.createFile(repoId, request.getFilepath());
+        return responseService.handleSingleResult("Sucess");
     }
 
     @GetMapping("/{repoId}")
@@ -38,23 +46,22 @@ public class FileController {
     }
 
     @PutMapping("/{repoId}")
-    @Operation(summary = "파일 수정", description = "")
-    public ApiResponse<?> modifyFiles(
+    @Operation(summary = "파일 업데이트", description = "")
+    public SingleResult<String> modifyFiles(
             @PathVariable("repoId") String repoId,
-            @RequestParam("filePath") String filePath
-//            @RequestBody UpdateFileRequest request
+            @RequestBody UpdateFileRequest request
     ) {
-//        fileService.updateFile(repoId, filePath, request);
-        return ApiResponse.ok();
+        fileService.updateFile(repoId, request);
+        return responseService.handleSingleResult("Sucess");
     }
 
     @DeleteMapping("/{repoId}")
     @Operation(summary = "파일 삭제", description = "")
-    public ResponseEntity<?> deleteFiles(
+    public SingleResult<String> deleteFiles(
             @PathVariable("repoId") String repoId,
             @RequestParam("filePath") String filePath
     ) {
-//        fileService.deleteFile(repoId, filePath);
-        return null;
+        fileService.deleteFile(repoId, filePath);
+        return responseService.handleSingleResult("Sucess");
     }
 }

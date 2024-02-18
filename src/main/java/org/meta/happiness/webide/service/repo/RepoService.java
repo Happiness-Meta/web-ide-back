@@ -1,17 +1,25 @@
 package org.meta.happiness.webide.service.repo;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.meta.happiness.webide.dto.file.FileDto;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
+import org.meta.happiness.webide.dto.repo.RepoDeleteRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
+import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.exception.RepoNotFoudException;
+import org.meta.happiness.webide.exception.UserNotFoundException;
+import org.meta.happiness.webide.repository.repo.S3RepoRepository;
 import org.meta.happiness.webide.repository.user.UserRepository;
 import org.meta.happiness.webide.repository.userrepo.UserRepoRepository;
 import org.meta.happiness.webide.repository.repo.RepoRepository;
+import org.meta.happiness.webide.security.JwtUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,14 +28,37 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RepoService {
 
     private final UserRepository userRepository;
     private final RepoRepository repoRepository;
     private final UserRepoRepository userRepoRepository;
 
+    private final S3RepoService s3RepoService;
+    private final S3RepoRepository s3RepoRepository;
+
+    private final JwtUtil jwtUtil;
+
+    public static final String DELIMITER = "/";
+
+    public static String createRepoPathPrefix(String repo) {
+        return ("repo" + DELIMITER + repo + DELIMITER);
+    }
+
     @Transactional
-    public RepoResponseDto createRepository(RepoCreateRequestDto request, User creator) {
+    public RepoResponseDto createRepository(RepoCreateRequestDto request, HttpServletRequest servletRequest) {
+
+        String token = servletRequest.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        String userEmail = jwtUtil.getEmailFromToken(token);
+        log.info("EMAIL >>>>>>>>>>>>>> {}", userEmail);
+
+        User creator = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
 
         Repo repo = Repo.createRepo(request, creator);
         Repo savedRepo = repoRepository.save(repo);
@@ -35,24 +66,33 @@ public class RepoService {
         UserRepo userRepo = UserRepo.addUserRepo(repo, creator);
         UserRepo savedUserRepo = userRepoRepository.save(userRepo);
 
-        return new RepoResponseDto(savedRepo.getId(), creator,
-                savedRepo.getName(), savedRepo.getProgrammingLanguage(),
-                savedRepo.getCreatedDate(), savedRepo.getLastModifiedDate());
+        log.info("saved repo >>>>>> {}", savedRepo.getId());
+
+        s3RepoService.createRepository(
+                createRepoPathPrefix(savedRepo.getId())
+        );
+
+        return RepoResponseDto.builder()
+                .id(savedRepo.getId())
+                .name(savedRepo.getName())
+                .programmingLanguage(savedRepo.getProgrammingLanguage())
+                .createdAt(savedRepo.getCreatedDate())
+                .modifiedAt(savedRepo.getLastModifiedDate())
+                .build();
     }
 
-    public RepoResponseDto findRepo(String repoId, Long userId){
+    public RepoResponseDto findRepo(String repoId, Long userId) {
         // TODO: 들어온 user에게 권한이 있는지 확인해야 함..?
 
         return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new));
     }
 
     @Transactional
-    public RepoResponseDto updateRepositoryName(String repoId, RepoUpdateNameRequestDto request, User user){
+    public RepoResponseDto updateRepositoryName(String repoId, RepoUpdateNameRequestDto request, User user) {
         // TODO: 들어온 user에게 권한이 있는지 확인해야 함
 
         Repo targetRepo = repoRepository.findById(repoId)
-                .orElseThrow(()-> new IllegalArgumentException("레포지토리가 존재하지 않음"));
-
+                .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않음"));
 
 
         targetRepo.changeName(request.getUpdatedName());
@@ -60,17 +100,36 @@ public class RepoService {
     }
 
     @Transactional
-    public void deleteRepository(String repoId, User user) {
-        Long id = user.getId();
-        // TODO: 들어온 user에게 권한이 있는지 확인해야 함
-//        if(userRepoRepository.findByUser(user).equals(id)){
-//
-//        }
+    public void deleteRepository(String repoId, HttpServletRequest servletRequest) {
+
+        String token = servletRequest.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        String userEmail = jwtUtil.getEmailFromToken(token);
+        log.info("EMAIL >>>>>>>>>>>>>> {}", userEmail);
+
+        User creator = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
 
         Repo repo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않습니다."));
 
+        if (!repo.getCreator().equals(creator)) {
+            throw new IllegalArgumentException("프로젝트 생성자가 아님.");
+        }
 
+        UserRepo userRepo = userRepoRepository.findByUserAndRepo(creator, repo).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않음")
+        );
+
+        String repositoryPath = createRepoPathPrefix(repo.getId());
+        s3RepoService.deleteRepository(
+                repositoryPath
+        );
+
+        userRepoRepository.delete(userRepo);
         repoRepository.delete(repo);
     }
 
@@ -114,5 +173,25 @@ public class RepoService {
 //                .map(RepoResponseDto::convertRepoToDto)
 //                .collect(Collectors.toList());
 //    }
+
+    public List<FileDto> getAllfilesFromRepo(String repoId){
+        Repo targetRepo = repoRepository.findById(repoId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포"));
+        List<FileMetaData> s3files = targetRepo.getS3fileMetadata();
+
+        return s3files.stream()
+                .map((fileMetaData -> {
+                    log.info(fileMetaData.getId());
+                    return toFileResponse(repoId, fileMetaData);
+                }))
+                .toList();
+    }
+
+    private FileDto toFileResponse(String repoId, FileMetaData metaData) {
+        return FileDto.builder()
+                .filePath(metaData.getPath())
+                .content(s3RepoRepository.getFileContent(repoId, metaData.getId()))
+                .build();
+    }
 
 }
