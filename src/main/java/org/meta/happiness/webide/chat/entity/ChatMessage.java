@@ -9,6 +9,7 @@ import org.meta.happiness.webide.chat.dto.ChatMessageType;
 import org.meta.happiness.webide.entity.BaseTimeEntity;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 
+
 @Entity
 @Getter
 @Builder
@@ -28,5 +29,4 @@ public class ChatMessage extends BaseTimeEntity {
     private String messageContent;
     //todo: enum 타입의 경우 어떤 설정을 해줘야 하는가?
     private ChatMessageType chatMessageType;
-
 }

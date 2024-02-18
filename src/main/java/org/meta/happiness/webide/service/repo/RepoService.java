@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.file.FileDto;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
+import org.meta.happiness.webide.dto.repo.RepoInviteResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.entity.FileMetaData;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -72,26 +74,27 @@ public class RepoService {
     }
 
     @Transactional(readOnly = true)
-    public RepoResponseDto findRepo(Repo repo, String userEmail) {
+    public RepoResponseDto findRepo(String repoId, String userEmail) {
 
         User findUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
 
-        Repo findRepo = repoRepository.findById(repo.getId())
+        Repo findRepo = repoRepository.findById(repoId)
                 .orElseThrow(RepoNotFoudException::new);
 
-        UserRepo userRepo = userRepoRepository.findByUserAndRepo(findUser, findRepo)
-                .orElseThrow(IsNotUserInviteRepo::new);
+        if(!userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
+            throw new IsNotUserInviteRepo();
+        }
 
-        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repo.getId()).orElseThrow(RepoNotFoudException::new));
+        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new));
     }
 
     @Transactional
-    public void invite(String requestPassword, Repo repo, String userEmail){
+    public void invite(String requestPassword, String repoId, String userEmail){
         User findUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
 
-        Repo findRepo = repoRepository.findById(repo.getId())
+        Repo findRepo = repoRepository.findById(repoId)
                 .orElseThrow(RepoNotFoudException::new);
 
         if(userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
@@ -104,12 +107,6 @@ public class RepoService {
         else {
             throw new IllegalArgumentException("repo의 비밀번호 불일치..");
         }
-    }
-
-    public RepoResponseDto findRepo(String repoId, Long userId) {
-        // TODO: 들어온 user에게 권한이 있는지 확인해야 함..?
-
-        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new));
     }
 
     @Transactional
@@ -220,4 +217,8 @@ public class RepoService {
         return fileDto;
     }
 
+    public RepoInviteResponseDto findRepoInviteInfo(String repoId) {
+        Optional<Repo> findRepo = repoRepository.findById(repoId);
+        return RepoInviteResponseDto.convertRepoToInvite(findRepo.orElseThrow(RepoNotFoudException::new));
+    }
 }
