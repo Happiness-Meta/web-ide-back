@@ -171,10 +171,15 @@ public class RepoService {
     }
 
     private FileDto toFileResponse(String repoId, FileMetaData metaData) {
-        return FileDto.builder()
+        FileDto fileDto = FileDto.builder()
                 .filePath(metaData.getPath())
                 .content(s3RepoRepository.getFileContent(repoId, metaData.getId()))
                 .build();
+
+        log.info("?>>>?>>>?>>> {}", fileDto.getFilePath());
+        log.info("?>>>?>>>?>>> {}", fileDto.getContent());
+
+        return fileDto;
     }
 
 }

@@ -9,8 +9,10 @@ import org.meta.happiness.webide.dto.user.*;
 import org.meta.happiness.webide.exception.EmailPatternException;
 import org.meta.happiness.webide.exception.PasswordPatternException;
 import org.meta.happiness.webide.security.JwtUtil;
+import org.meta.happiness.webide.security.UserDetailsImpl;
 import org.meta.happiness.webide.service.ResponseService;
 import org.meta.happiness.webide.service.UserService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +38,14 @@ public class UserController {
             throw new PasswordPatternException();
 
         return responseService.handleSingleResult(userService.registerUser(form));
+    }
+
+    @GetMapping("/user")
+    public SingleResult<UserResponseDto> checkUser(
+            @AuthenticationPrincipal UserDetailsImpl user
+            ){
+
+        return responseService.handleSingleResult(userService.findUserEmail(user.getUsername()));
     }
 
 

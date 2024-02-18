@@ -51,7 +51,7 @@ public class ExceptionAdvice {
     @ExceptionHandler(PasswordPatternException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result failInputPassword() {
-        return responseService.handleFailResult(400, "대문자 1개와 특수문자 1개를 포함해야 합니다.");
+        return responseService.handleFailResult(400, "비밀번호는 영문 대,소문자와 숫자, 특수기호가 적어도 1개 이상씩 포함된 8 ~ 20자의 비밀번호여야 합니다.");
     }
 
     @ExceptionHandler(RefreshTokenException.class)
