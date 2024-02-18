@@ -29,4 +29,5 @@ public class ChatMessage extends BaseTimeEntity {
     private ChatMessageType chatMessageType;
 
     private Long userId;
+    private String repoId;
 }
