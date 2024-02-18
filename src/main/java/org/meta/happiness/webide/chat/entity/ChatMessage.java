@@ -28,5 +28,5 @@ public class ChatMessage extends BaseTimeEntity {
 
     private ChatMessageType chatMessageType;
 
-    private Long senderId;
+    private Long userId;
 }
