@@ -50,20 +50,13 @@ public class ReposController {
     private final RepoService repoService;
     private final ResponseService responseService;
 
-    private final UserRepository userRepository;
-    private final UserRepoRepository userRepoRepository;
-
-    private final JwtUtil jwtUtil;
-
-
     @PostMapping
     @Operation(summary = "신규 레포지토리 생성", description = "")
     public SingleResult<?> createRepository(
             @RequestBody RepoCreateRequestDto request,
-            HttpServletRequest servletRequest
-//            @AuthenticationPrincipal UserDetailsImpl user
+            @AuthenticationPrincipal UserDetailsImpl user
     ) {
-        return responseService.handleSingleResult(repoService.createRepository(request, servletRequest));
+        return responseService.handleSingleResult(repoService.createRepository(request, user.getUsername()));
     }
 
     //TODO: 지금은 creator만 조회가 가능하다.
@@ -99,30 +92,30 @@ public class ReposController {
     @Operation(summary = "레포지토리 이름 변경", description = "")
     public SingleResult<RepoResponseDto> updateRepositoryName(
             @PathVariable("repoId") String repoId,
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserDetailsImpl user,
             @RequestBody RepoUpdateNameRequestDto request
     ) {
-        return responseService.handleSingleResult(repoService.updateRepositoryName(repoId, request, user));
+        return responseService.handleSingleResult(repoService.updateRepositoryName(repoId, request, user.getUsername()));
     }
 
     @DeleteMapping("/{repoId}")
     @Operation(summary = "레포지토리 삭제", description = "")
     public Result deleteRepository(
             @PathVariable("repoId") String repoId,
-            HttpServletRequest servletRequest
+            @AuthenticationPrincipal UserDetailsImpl user
     ) {
-        repoService.deleteRepository(repoId, servletRequest);
+        repoService.deleteRepository(repoId, user.getUsername());
         return responseService.handleSuccessResult();
 
     }
 
 
-    @GetMapping("/{userId}/all")
+    @GetMapping("/all")
     @Operation(summary = "사용자 전체 레포지토리 조회", description = "")
     public MultipleResult<RepoResponseDto> getAllRepositoryByUser(
-            @PathVariable Long userId
+            @AuthenticationPrincipal UserDetailsImpl user
     ) {
-        return responseService.handleListResult(repoService.findAllRepoByUser(userId));
+        return responseService.handleListResult(repoService.findAllRepoByUser(user.getUsername()));
     }
 
 
