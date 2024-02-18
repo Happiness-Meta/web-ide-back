@@ -18,6 +18,9 @@ public interface UserRepoRepository extends JpaRepository<UserRepo, Long> {
     @Query("select r from Repo r join r.userRepoUsers ur where ur.user = : user")
     List<UserRepo> findAllRepoByUser(@Param("user") Optional<User> user);
 
+//    @Query("select u from User r join r.userRepoUsers ur where ur.user = : user")
+//    List<UserRepo> findAllUserByRepo(@Param("repo") Optional<Repo> repo);
+
 
 //    @Query(value = "SELECT * FROM user_repo ORDER BY repo_last_modified_date DESC LIMIT 2", nativeQuery = true)
 //    List<UserRepo> findRecentlyRepo();

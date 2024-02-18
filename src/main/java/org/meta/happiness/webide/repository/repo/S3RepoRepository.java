@@ -22,6 +22,8 @@ public class S3RepoRepository {
 
     public static final String DELIMITER = "/";
 
+    public static final String EMPTY = "";
+
     public Optional<String> uploadRepo(String repoName) {
         String accessUrl = null;
         try {
@@ -32,7 +34,7 @@ public class S3RepoRepository {
 
             s3Client.putObject(
                     putObjectRequest,
-                    RequestBody.fromString(repoName)
+                    RequestBody.fromString(EMPTY)
             );
 
             GetUrlRequest getUrlRequest = GetUrlRequest.builder()
@@ -70,12 +72,14 @@ public class S3RepoRepository {
         String key = "repo" + DELIMITER + repoId + DELIMITER + id + ".txt";
         String content = "";
         try {
+            log.info(key);
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
                     .build();
 
             content = s3Client.getObject(getObjectRequest, ResponseTransformer.toBytes()).asUtf8String();
+            log.info(content);
         } catch (Exception e) {
             log.error("error message={}", e.getMessage());
         }
