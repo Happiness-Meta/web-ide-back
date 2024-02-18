@@ -1,6 +1,7 @@
 package org.meta.happiness.webide.dto.repo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 public class RepoResponseDto {
     private String id;
+    @JsonIgnore
     private User createId;
     private String name;
     private Language programmingLanguage;

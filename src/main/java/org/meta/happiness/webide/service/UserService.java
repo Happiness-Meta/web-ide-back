@@ -48,7 +48,7 @@ public class UserService {
         if (!passwordEncoder.matches(form.getPassword(), user.getPassword())) {
             throw new LoginFailureException();
         }
-        return new UserLoginResponseDto(user.getEmail(), user.getNickname(),
+        return new UserLoginResponseDto(user.getId(), user.getEmail(), user.getNickname(),
                 jwtUtil.generateToken(user.getEmail()) /*jwtUtil.refreshToken(user.getEmail())*/
         );
     }
@@ -94,7 +94,7 @@ public class UserService {
         boolean checkValid = jwtUtil.isTokenValid(token);
         if (checkValid) {
             user.changeRefreshToken(jwtUtil.generateRefreshToken(user.getEmail()));
-            return new UserLoginResponseDto(user.getEmail(), user.getNickname(), user.getRefreshToken());
+            return new UserLoginResponseDto(user.getId(), user.getEmail(), user.getNickname(), user.getRefreshToken());
         }else{
             throw new RefreshTokenException();
         }
