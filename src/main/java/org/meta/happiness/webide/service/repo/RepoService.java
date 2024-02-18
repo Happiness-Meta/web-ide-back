@@ -47,16 +47,7 @@ public class RepoService {
     }
 
     @Transactional
-    public RepoResponseDto createRepository(RepoCreateRequestDto request, HttpServletRequest servletRequest) {
-
-        String token = servletRequest.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-
-        String userEmail = jwtUtil.getEmailFromToken(token);
-        log.info("EMAIL >>>>>>>>>>>>>> {}", userEmail);
-
+    public RepoResponseDto createRepository(RepoCreateRequestDto request, String userEmail) {
         User creator = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
 
@@ -88,8 +79,10 @@ public class RepoService {
     }
 
     @Transactional
-    public RepoResponseDto updateRepositoryName(String repoId, RepoUpdateNameRequestDto request, User user) {
+    public RepoResponseDto updateRepositoryName(String repoId, RepoUpdateNameRequestDto request, String userEmail) {
         // TODO: 들어온 user에게 권한이 있는지 확인해야 함
+        User creator = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
 
         Repo targetRepo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않음"));
@@ -103,16 +96,7 @@ public class RepoService {
     }
 
     @Transactional
-    public void deleteRepository(String repoId, HttpServletRequest servletRequest) {
-
-        String token = servletRequest.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-
-        String userEmail = jwtUtil.getEmailFromToken(token);
-        log.info("EMAIL >>>>>>>>>>>>>> {}", userEmail);
-
+    public void deleteRepository(String repoId, String userEmail) {
         User creator = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
 
@@ -137,11 +121,10 @@ public class RepoService {
     }
 
     @Transactional(readOnly = true)
-    public List<RepoResponseDto> findAllRepoByUser(Long userId) {
+    public List<RepoResponseDto> findAllRepoByUser(String userEmail) {
         // 1. 사용자 ID를 이용하여 해당 사용자를 데이터베이스에서 조회
-        User findUser = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 userId를 찾을 수 없습니다." + userId));
-
+        User findUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("해당 userId를 찾을 수 없습니다." + userEmail));
         // 2. 사용자가 참여한 모든 레포지토리를 데이터베이스에서 조회
         List<UserRepo> userRepos = userRepoRepository.findByUser(findUser);
 
