@@ -1,18 +1,17 @@
 package org.meta.happiness.webide.service.repo;
 
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.file.FileDto;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
-import org.meta.happiness.webide.dto.repo.RepoDeleteRequestDto;
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
+import org.meta.happiness.webide.exception.IsNotUserInviteRepo;
 import org.meta.happiness.webide.exception.RepoNotFoudException;
 import org.meta.happiness.webide.exception.UserNotFoundException;
 import org.meta.happiness.webide.repository.repo.S3RepoRepository;
@@ -70,6 +69,41 @@ public class RepoService {
                 .createdAt(savedRepo.getCreatedDate())
                 .modifiedAt(savedRepo.getLastModifiedDate())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public RepoResponseDto findRepo(Repo repo, String userEmail) {
+
+        User findUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
+
+        Repo findRepo = repoRepository.findById(repo.getId())
+                .orElseThrow(RepoNotFoudException::new);
+
+        UserRepo userRepo = userRepoRepository.findByUserAndRepo(findUser, findRepo)
+                .orElseThrow(IsNotUserInviteRepo::new);
+
+        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repo.getId()).orElseThrow(RepoNotFoudException::new));
+    }
+
+    @Transactional
+    public void invite(String requestPassword, Repo repo, String userEmail){
+        User findUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
+
+        Repo findRepo = repoRepository.findById(repo.getId())
+                .orElseThrow(RepoNotFoudException::new);
+
+        if(userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
+            return;
+        }
+
+        if(findRepo.getPassword().equals(requestPassword)) {
+            userRepoRepository.save(UserRepo.addUserRepo(findRepo, findUser));
+        }
+        else {
+            throw new IllegalArgumentException("repo의 비밀번호 불일치..");
+        }
     }
 
     public RepoResponseDto findRepo(String repoId, Long userId) {
