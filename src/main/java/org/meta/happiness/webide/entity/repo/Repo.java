@@ -34,6 +34,8 @@ public class Repo extends BaseTimeEntity {
 
     private String efsAccessPoint;
 
+    private String password;
+
     @OneToMany(mappedBy = "repo", cascade = CascadeType.REMOVE)
     private List<UserRepo> userRepoUsers;
 
@@ -46,7 +48,12 @@ public class Repo extends BaseTimeEntity {
         repo.creator = creator;
         repo.programmingLanguage = request.getProgrammingLanguage();
         repo.name = request.getName();
+        repo.password = createPassword(repo);
         return repo;
+    }
+
+    private static String createPassword(Repo repo) {
+        return repo.id.substring(0, 4);
     }
 
     public void changeName(String name){

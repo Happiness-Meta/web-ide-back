@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-
 /**
  * 수연님 코멘트
  * -레포지토리 이름
@@ -50,15 +49,19 @@ public class ReposController {
 
     private final RepoService repoService;
     private final ResponseService responseService;
+    private final UserRepository userRepository;
+
+    private final JwtUtil jwtUtil;
 
 
     @PostMapping
     @Operation(summary = "신규 레포지토리 생성", description = "")
     public SingleResult<?> createRepository(
             @RequestBody RepoCreateRequestDto request,
-            @AuthenticationPrincipal UserDetailsImpl user
+            HttpServletRequest servletRequest
+//            @AuthenticationPrincipal UserDetailsImpl user
     ) {
-        return responseService.handleSingleResult(repoService.createRepository(request, user.getUsername()));
+        return responseService.handleSingleResult(repoService.createRepository(request, servletRequest));
     }
 
     //TODO: 지금은 creator만 조회가 가능하다.
@@ -72,10 +75,10 @@ public class ReposController {
         return responseService.handleSingleResult(repoService.findRepo(repoId, userId));
     }
 
-    @GetMapping("/recent")
+    @GetMapping("/{userId}/recent")
     @Operation(summary = "사용자가 최근 사용한 레포지토리 조회(최대 2개)", description = "")
     public ApiResponse<?> getRecentRepository(
-            @AuthenticationPrincipal UserDetailsImpl user
+//            @PathVariable String projectId
     ) {
         return ApiResponse.ok();
     }
@@ -94,37 +97,30 @@ public class ReposController {
     @Operation(summary = "레포지토리 이름 변경", description = "")
     public SingleResult<RepoResponseDto> updateRepositoryName(
             @PathVariable("repoId") String repoId,
-            @AuthenticationPrincipal UserDetailsImpl user,
+            @AuthenticationPrincipal User user,
             @RequestBody RepoUpdateNameRequestDto request
     ) {
-        return responseService.handleSingleResult(repoService.updateRepositoryName(repoId, request, user.getUsername()));
+        return responseService.handleSingleResult(repoService.updateRepositoryName(repoId, request, user));
     }
 
     @DeleteMapping("/{repoId}")
     @Operation(summary = "레포지토리 삭제", description = "")
     public Result deleteRepository(
             @PathVariable("repoId") String repoId,
-            @AuthenticationPrincipal UserDetailsImpl user
+            HttpServletRequest servletRequest
     ) {
-        repoService.deleteRepository(repoId, user.getUsername());
+        repoService.deleteRepository(repoId, servletRequest);
         return responseService.handleSuccessResult();
 
     }
 
 
-    /**
-     *
-     *
-     * Claim 값 여기 다있잖아 지금 뭐하는 거야 지금
-     * 여기 주목하세요 여러분
-     *
-     */
-    @GetMapping("/all")
+    @GetMapping("/{userId}/all")
     @Operation(summary = "사용자 전체 레포지토리 조회", description = "")
     public MultipleResult<RepoResponseDto> getAllRepositoryByUser(
-            @AuthenticationPrincipal UserDetailsImpl user
+            @PathVariable Long userId
     ) {
-        return responseService.handleListResult(repoService.findAllRepoByUser(user.getUsername()));
+        return responseService.handleListResult(repoService.findAllRepoByUser(userId));
     }
 
 

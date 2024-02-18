@@ -11,6 +11,7 @@ import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
+import org.meta.happiness.webide.exception.IsNotUserInviteRepo;
 import org.meta.happiness.webide.exception.RepoNotFoudException;
 import org.meta.happiness.webide.exception.UserNotFoundException;
 import org.meta.happiness.webide.repository.repo.S3RepoRepository;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,15 +68,43 @@ public class RepoService {
                 .build();
     }
 
-    public RepoResponseDto findRepo(String repoId, Long userId) {
-        // TODO: 들어온 user에게 권한이 있는지 확인해야 함..?
+    @Transactional(readOnly = true)
+    public RepoResponseDto findRepo(Repo repo, String userEmail) {
 
-        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new));
+        User findUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
+
+        Repo findRepo = repoRepository.findById(repo.getId())
+                .orElseThrow(RepoNotFoudException::new);
+
+        UserRepo userRepo = userRepoRepository.findByUserAndRepo(findUser, findRepo)
+                .orElseThrow(IsNotUserInviteRepo::new);
+
+        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repo.getId()).orElseThrow(RepoNotFoudException::new));
+    }
+
+    @Transactional
+    public void invite(String requestPassword, Repo repo, String userEmail){
+        User findUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
+
+        Repo findRepo = repoRepository.findById(repo.getId())
+                .orElseThrow(RepoNotFoudException::new);
+
+        if(userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
+            return;
+        }
+
+        if(findRepo.getPassword().equals(requestPassword)) {
+            userRepoRepository.save(UserRepo.addUserRepo(findRepo, findUser));
+        }
+        else {
+            throw new IllegalArgumentException("repo의 비밀번호 불일치..");
+        }
     }
 
     @Transactional
     public RepoResponseDto updateRepositoryName(String repoId, RepoUpdateNameRequestDto request, String userEmail) {
-        // TODO: 들어온 user에게 권한이 있는지 확인해야 함
         User creator = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
         Repo targetRepo = repoRepository.findById(repoId)
