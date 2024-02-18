@@ -1,6 +1,7 @@
 package org.meta.happiness.webide.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.user.*;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.exception.ExistAccountException;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -29,6 +31,8 @@ public class UserService {
         validateDuplicatedUser(form.getEmail(), form.getNickname());
         User user = User.createUser(form, passwordEncoder.encode(form.getPassword()),null);
         User savedUser = userRepository.save(user);
+        log.info("user={}", savedUser);
+
         return new UserResponseDto(savedUser.getId(),savedUser.getNickname(),
                 savedUser.getEmail(),savedUser.getCreatedDate(),savedUser.getLastModifiedDate());
     }

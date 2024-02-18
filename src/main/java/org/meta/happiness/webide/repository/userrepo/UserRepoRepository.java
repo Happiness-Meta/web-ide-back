@@ -18,6 +18,8 @@ public interface UserRepoRepository extends JpaRepository<UserRepo, Long> {
     @Query("select r from Repo r join r.userRepoUsers ur where ur.user = : user")
     List<UserRepo> findAllRepoByUser(@Param("user") Optional<User> user);
 
+    boolean existsByRepoAndUser(Repo repo, User findUser);
+
 //    @Query("select u from User r join r.userRepoUsers ur where ur.user = : user")
 //    List<UserRepo> findAllUserByRepo(@Param("repo") Optional<Repo> repo);
 

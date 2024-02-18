@@ -49,6 +49,10 @@ public class Repo extends BaseTimeEntity {
         return repo;
     }
 
+    private static String createPassword(Repo repo) {
+        return repo.id.substring(0, 4);
+    }
+
     public void changeName(String name){
         this.name = name;
     }
