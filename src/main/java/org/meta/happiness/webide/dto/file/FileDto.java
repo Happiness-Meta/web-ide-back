@@ -1,7 +1,9 @@
 package org.meta.happiness.webide.dto.file;
 
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 public class FileDto {
     private String filePath;
     private String content;

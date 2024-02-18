@@ -64,6 +64,10 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    public UserResponseDto findUserEmail(String userEmail) {
+        return UserResponseDto.convertUserToDto(userRepository.findByEmail(userEmail).orElseThrow(UserNotFoundException::new));
+    }
+
     public UserResponseDto findUser(Long userId) {
         return UserResponseDto.convertUserToDto(userRepository.findById(userId).orElseThrow(UserNotFoundException::new));
     }
