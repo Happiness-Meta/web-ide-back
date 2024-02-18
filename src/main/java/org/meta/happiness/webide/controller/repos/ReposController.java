@@ -2,43 +2,20 @@ package org.meta.happiness.webide.controller.repos;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.api.ApiResponse;
-import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
-import org.meta.happiness.webide.dto.repo.RepoDeleteRequestDto;
-import org.meta.happiness.webide.dto.repo.RepoResponseDto;
-import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
+import org.meta.happiness.webide.dto.repo.*;
 import org.meta.happiness.webide.dto.response.MultipleResult;
 import org.meta.happiness.webide.dto.response.Result;
 import org.meta.happiness.webide.dto.response.SingleResult;
-import org.meta.happiness.webide.dto.user.UserResponseDto;
-
-
-import org.meta.happiness.webide.entity.user.User;
-import org.meta.happiness.webide.entity.userrepo.UserRepo;
-import org.meta.happiness.webide.repository.user.UserRepository;
-import org.meta.happiness.webide.repository.userrepo.UserRepoRepository;
-import org.meta.happiness.webide.repostarter.RepoStarter;
-
-import org.meta.happiness.webide.security.JwtUtil;
 import org.meta.happiness.webide.security.UserDetailsImpl;
 import org.meta.happiness.webide.service.ResponseService;
 import org.meta.happiness.webide.service.repo.RepoService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
 
-/**
- * 수연님 코멘트
- * -레포지토리 이름
- * -레포지토리 설명(디스크립션)
- * -레포지토리 마지막 편집일
- * -레포지토리 url??은 어느쪽에서 만들 수 있는 건가요
- * -레포지토리에 알맞는 image url(누르면 해당 레포지토리에 해당하는 코드 페이지로 이동하는)
- */
 // TODO: User 권한 검사 필요합니다.
 @RestController
 @RequestMapping("/api/repos")
@@ -60,14 +37,13 @@ public class ReposController {
     }
 
     //TODO: 지금은 creator만 조회가 가능하다.
-    @GetMapping("/{userId}/{repoId}")
+    @GetMapping("/{repoId}")
     @Operation(summary = "개별 레포지토리 조회", description = "")
     public SingleResult<RepoResponseDto> getRepository(
-            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetailsImpl user,
             @PathVariable String repoId
     ) {
-
-        return responseService.handleSingleResult(repoService.findRepo(repoId, userId));
+        return responseService.handleSingleResult(repoService.findRepo(repoId, user.getUsername()));
     }
 
     @GetMapping("/{userId}/recent")
@@ -78,8 +54,8 @@ public class ReposController {
         return ApiResponse.ok();
     }
 
-    @GetMapping("/{repoId}")
-    @Operation(summary = "개별 레포지토리 조회", description = "")
+    @GetMapping("/{repoId}/files")
+    @Operation(summary = "레포지토리 전체 파일 가지고 오기", description = "")
     public SingleResult<?> getRepository(
             @PathVariable("repoId") String repoId
     ) {
@@ -116,6 +92,27 @@ public class ReposController {
             @AuthenticationPrincipal UserDetailsImpl user
     ) {
         return responseService.handleListResult(repoService.findAllRepoByUser(user.getUsername()));
+    }
+
+
+    @GetMapping("/{repoId}/invite")
+    @Operation(summary = "나의 레포지토리 초대 링크 & 비밀번호 안내", description = "")
+    public SingleResult<?> getInviteByMyRepo(
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @PathVariable String repoId
+    ){
+        return responseService.handleSingleResult(repoService.findRepoInviteInfo(repoId));
+    }
+
+    @PostMapping("/invite/{repoId}")
+    @Operation(summary = "개인 레포지토리 초대", description = "")
+    public Result inviteRepository(
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @RequestBody RepoInviteRequestDto repoInvitePassword,
+            @PathVariable String repoId
+    ){
+        repoService.invite(repoInvitePassword.getPassword(), repoId, user.getUsername());
+        return responseService.handleSuccessResult();
     }
 
 
