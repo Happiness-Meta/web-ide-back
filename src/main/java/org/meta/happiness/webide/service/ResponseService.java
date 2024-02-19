@@ -19,7 +19,7 @@ public class ResponseService {
     // 다중 결과 처리
     public <T> MultipleResult<T> handleListResult(List<T> list) {
         MultipleResult<T> result = new MultipleResult<>();
-        result.setDatas(list);
+        result.setData(list);
         setSuccessResult(result);
         return result;
     }

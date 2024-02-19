@@ -65,10 +65,11 @@ public class UserController {
         return responseService.handleSingleResult(userService.findUser(userId));
     }
     //회원 정보 수정
-    @PutMapping("/user/{id}")
-    public SingleResult<UserResponseDto> updateUser(@PathVariable("id") Long userId,
-                                                    @RequestBody UserUpdateDto request) {
-        return responseService.handleSingleResult(userService.updateUser(userId, request));
+    @PutMapping("/user")
+    public SingleResult<UserResponseDto> updateUser(
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @RequestBody UserUpdateDto request) {
+        return responseService.handleSingleResult(userService.updateUser(user.getUsername(), request));
     }
     //회원 삭제
     @DeleteMapping("/user/{id}")

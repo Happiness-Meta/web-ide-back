@@ -8,5 +8,5 @@ import java.util.List;
 @Getter
 @Setter
 public class MultipleResult<T> extends Result{
-    List<T> datas;
+    List<T> data;
 }

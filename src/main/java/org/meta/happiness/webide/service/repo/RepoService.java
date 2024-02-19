@@ -5,8 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.file.FileDto;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
+import org.meta.happiness.webide.dto.repo.RepoInviteResponseDto;
+
 import org.meta.happiness.webide.dto.repo.RepoResponseDto;
 import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
+import org.meta.happiness.webide.dto.response.RepoGetAllFilesResponse;
+import org.meta.happiness.webide.dto.response.RepoTreeResponse;
 import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
@@ -22,7 +26,9 @@ import org.meta.happiness.webide.security.JwtUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -72,26 +78,29 @@ public class RepoService {
     }
 
     @Transactional(readOnly = true)
-    public RepoResponseDto findRepo(Repo repo, String userEmail) {
+    public RepoResponseDto findRepo(String repoId, String userEmail) {
+
 
         User findUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
 
-        Repo findRepo = repoRepository.findById(repo.getId())
+
+        Repo findRepo = repoRepository.findById(repoId)
                 .orElseThrow(RepoNotFoudException::new);
 
-        UserRepo userRepo = userRepoRepository.findByUserAndRepo(findUser, findRepo)
-                .orElseThrow(IsNotUserInviteRepo::new);
+        if(!userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
+            throw new IsNotUserInviteRepo();
+        }
 
-        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repo.getId()).orElseThrow(RepoNotFoudException::new));
+        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new));
     }
 
     @Transactional
-    public void invite(String requestPassword, Repo repo, String userEmail){
+    public void invite(String requestPassword, String repoId, String userEmail){
         User findUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
 
-        Repo findRepo = repoRepository.findById(repo.getId())
+        Repo findRepo = repoRepository.findById(repoId)
                 .orElseThrow(RepoNotFoudException::new);
 
         if(userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
@@ -195,21 +204,40 @@ public class RepoService {
 //                .collect(Collectors.toList());
 //    }
 
-    public List<FileDto> getAllfilesFromRepo(String repoId){
+    @Transactional
+    public RepoGetAllFilesResponse getAllFilesFromRepo(String repoId){
         Repo targetRepo = repoRepository.findById(repoId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포"));
         List<FileMetaData> s3files = targetRepo.getS3fileMetadata();
 
-        return s3files.stream()
+        if(s3files.isEmpty()){
+            RepoGetAllFilesResponse.builder()
+                    .fileData(Collections.emptyList())
+                    .treeData(RepoTreeResponse.builder().build())
+                    .build();
+        }
+
+        List<FileDto> fileData = s3files.stream()
                 .map((fileMetaData -> {
                     log.info(fileMetaData.getId());
                     return toFileResponse(repoId, fileMetaData);
                 }))
                 .toList();
+//        List<String> s3Keys = fileData.stream().map(FileDto::getFilePath)
+//                        .toList();
+
+        RepoTreeResponse fileTree = RepoTreeResponse.buildTreeFromKeys(fileData);
+
+        return RepoGetAllFilesResponse.builder()
+                .fileData(fileData)
+                .treeData(fileTree)
+                .build();
     }
+
 
     private FileDto toFileResponse(String repoId, FileMetaData metaData) {
         FileDto fileDto = FileDto.builder()
+                .uuid(metaData.getId())
                 .filePath(metaData.getPath())
                 .content(s3RepoRepository.getFileContent(repoId, metaData.getId()))
                 .build();
@@ -218,6 +246,14 @@ public class RepoService {
         log.info("?>>>?>>>?>>> {}", fileDto.getContent());
 
         return fileDto;
+    }
+    public RepoInviteResponseDto findRepoInviteInfo(String repoId, String userEmail) {
+        Repo findRepo = repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new);
+        if(!findRepo.getCreator().getEmail().equals(userEmail)){
+            throw new IllegalArgumentException("Creator 아님!");
+        }
+
+        return RepoInviteResponseDto.convertRepoToInvite(findRepo);
     }
 
 }
