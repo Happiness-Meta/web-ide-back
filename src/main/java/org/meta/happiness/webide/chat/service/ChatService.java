@@ -6,10 +6,8 @@ import org.meta.happiness.webide.chat.dto.ChatMessageDto;
 import org.meta.happiness.webide.chat.dto.ChatMessageType;
 import org.meta.happiness.webide.chat.entity.ChatMessage;
 import org.meta.happiness.webide.chat.repository.ChatMessageRepository;
-import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.repository.user.UserRepository;
-import org.meta.happiness.webide.repository.userrepo.UserRepoRepository;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -29,41 +27,44 @@ public class ChatService {
     private final SimpMessageSendingOperations messagingTemplate;
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
-//    private final UserRepoRepository userRepoRepository;
 
     // 필요한 메서드: 메시지 전송/저장
     // 채팅방 입장(레포당 채팅 룸은 한개씩 있기에, 사실상 레포 입장과 동일하다)
     public void enterRoom(String repoId, ChatMessageDto chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         // 현재 실행 중인 웹소켓 세션 헤더에 사용자 이름 넣기.
         headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
+        log.info("{}가 입장", chatMessage.getSender());
     }
 
     public void saveAndSendMessage(ChatMessageDto message) {
-        saveMessage(message);
         sendMessage(message);
+        saveMessage(message);
     }
     // 메시지 전송
     private void sendMessage(ChatMessageDto message) {
-        log.info("현재 레포 ID: {}", message.getRepoId());
+        log.info("메시진 발신자: {}", message.getSender());
         log.info("메시지 내용: {}", message.getContent());
         messagingTemplate.convertAndSend("sub/repo/" + message.getRepoId(), message);
     }
     // 메시지 저장
     private void saveMessage(ChatMessageDto message) {
-        log.info("보낸 사람 닉네임: {}", message.getSender());
+        log.info("저장될 메시지: {}", message);
         User user = userRepository.findByNickname(message.getSender())
                 .orElseThrow(()->new IllegalArgumentException("존재하지 않는 회원입니다"));
-//        Repo repo = userRepoRepository.;
 
         // Todo: 실제로 메시지 저장하는 부분 구현, 레포 아이디를 가지고 있어야 하는데 어디서 어떻게 반영이 되는지 알아야 한다.
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatMessageType(message.getType())
-                .messageContent(message.getContent()).build();
+                .messageContent(message.getContent())
+                .userId(message.getUserId())
+                .repoId(message.getRepoId())
+                .build();
         chatMessageRepository.save(chatMessage);
     }
 
     public List<ChatMessageDto> getMessagesInRepo(String repoId) {
         // todo: 메서드 설계 -> 레포 아이디로 메시지 가져오기
+        // 데이터베이스에서 가져온 채팅 메시지
         Optional<List<ChatMessage>> messages = chatMessageRepository.findByRepoId(repoId);
 
         return messages.orElseGet(ArrayList::new)

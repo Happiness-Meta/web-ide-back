@@ -10,10 +10,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -33,7 +31,7 @@ public class ChatController {
     */
     @MessageMapping("/chat/enter/{repoId}")
     @SendTo("/sub/repo/{repoId}")
-    public ChatMessageDto addUser(
+    public ChatMessageDto enterRoom(
             @DestinationVariable String repoId,
             @Payload ChatMessageDto chatMessage,
             SimpMessageHeaderAccessor headerAccessor
@@ -41,7 +39,6 @@ public class ChatController {
         // 현재 실행 중인 웹소켓 세션에 사용자 이름 넣기.
         // todo: 클라이언트에서 메시지를 받은 뒤에 어떻게 처리하는지 확인 필요
         chatService.enterRoom(repoId, chatMessage, headerAccessor);
-        log.info("{}가 입장", chatMessage.getSender());
         return chatMessage;
     }
 

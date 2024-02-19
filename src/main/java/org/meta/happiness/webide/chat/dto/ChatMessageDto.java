@@ -10,10 +10,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class ChatMessageDto {
-    private ChatMessageType type;
     private String content;
     private String repoId;
+    private Long userId;
     private String sender;
+    private ChatMessageType type;
     private LocalDateTime createdAt;
 }
 
