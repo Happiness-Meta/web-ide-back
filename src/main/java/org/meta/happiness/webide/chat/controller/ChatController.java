@@ -2,7 +2,8 @@ package org.meta.happiness.webide.chat.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.meta.happiness.webide.chat.dto.ChatMessageDto;
+import org.meta.happiness.webide.chat.dto.ChatMessageRequestDto;
+import org.meta.happiness.webide.chat.dto.ChatMessageResponseDto;
 import org.meta.happiness.webide.chat.service.ChatService;
 import org.meta.happiness.webide.dto.api.ApiResponse;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -28,12 +29,13 @@ public class ChatController {
     클라이언트가 아래 경로로 요청을 한다
     내용을 담은 메시지 객체와 레포 아이디를 담은 경로가 넘어온다.
     이 메시지를 그대로 특정 방을 구독하고 있는 사람들에게 보내준다.
+    매개 변수는 MessageMapping의 repoId를 가진다.
     */
     @MessageMapping("/chat/enter/{repoId}")
     @SendTo("/sub/repo/{repoId}")
-    public ChatMessageDto enterRoom(
+    public ChatMessageRequestDto enterRoom(
             @DestinationVariable String repoId,
-            @Payload ChatMessageDto chatMessage,
+            @Payload ChatMessageRequestDto chatMessage,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         // 현재 실행 중인 웹소켓 세션에 사용자 이름 넣기.
@@ -47,11 +49,11 @@ public class ChatController {
     * 아래 경로로 메시지 정보가 들어온다
     * 특정 채팅방 경로에 메시지를 뿌려준다
     * */
-    @MessageMapping("/chat/send/message")
+    @MessageMapping("/chat/send/{repoId}")
     @SendTo("sub/repo/{repoId}")
-    public ChatMessageDto sendMessage(
+    public ChatMessageRequestDto sendMessage(
             @DestinationVariable String repoId,
-            @Payload ChatMessageDto chatMessage
+            @Payload ChatMessageRequestDto chatMessage
     ) {
         chatService.saveAndSendMessage(chatMessage);
         return chatMessage;
@@ -60,7 +62,7 @@ public class ChatController {
     //레포 안의 전체 메시지 불러오기 <- 프론트에서 이전 메시지 불러오는 기능으로 사용되어야 함.
     @GetMapping("/chat/{repoId}/messages")
     public ApiResponse<?> getMessagesInRepo(@PathVariable String repoId) {
-        List<ChatMessageDto> responseData = chatService.getMessagesInRepo(repoId);
+        List<ChatMessageResponseDto> responseData = chatService.getMessagesInRepo(repoId);
         return ApiResponse.ok(responseData);
     }
 }

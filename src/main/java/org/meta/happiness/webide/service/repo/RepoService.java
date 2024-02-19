@@ -16,7 +16,7 @@ import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.exception.IsNotUserInviteRepo;
-import org.meta.happiness.webide.exception.RepoNotFoudException;
+import org.meta.happiness.webide.exception.RepoNotFoundException;
 import org.meta.happiness.webide.exception.UserNotFoundException;
 import org.meta.happiness.webide.repository.repo.S3RepoRepository;
 import org.meta.happiness.webide.repository.user.UserRepository;
@@ -28,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -86,13 +85,13 @@ public class RepoService {
 
 
         Repo findRepo = repoRepository.findById(repoId)
-                .orElseThrow(RepoNotFoudException::new);
+                .orElseThrow(RepoNotFoundException::new);
 
         if(!userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
             throw new IsNotUserInviteRepo();
         }
 
-        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new));
+        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoundException::new));
     }
 
     @Transactional
@@ -101,7 +100,7 @@ public class RepoService {
                 .orElseThrow(UserNotFoundException::new);
 
         Repo findRepo = repoRepository.findById(repoId)
-                .orElseThrow(RepoNotFoudException::new);
+                .orElseThrow(RepoNotFoundException::new);
 
         if(userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
             return;
@@ -118,7 +117,7 @@ public class RepoService {
     public RepoResponseDto findRepo(String repoId, Long userId) {
         // TODO: 들어온 user에게 권한이 있는지 확인해야 함..?
 
-        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new));
+        return RepoResponseDto.convertRepoToDto(repoRepository.findById(repoId).orElseThrow(RepoNotFoundException::new));
     }
 
     @Transactional
@@ -248,7 +247,7 @@ public class RepoService {
         return fileDto;
     }
     public RepoInviteResponseDto findRepoInviteInfo(String repoId, String userEmail) {
-        Repo findRepo = repoRepository.findById(repoId).orElseThrow(RepoNotFoudException::new);
+        Repo findRepo = repoRepository.findById(repoId).orElseThrow(RepoNotFoundException::new);
         if(!findRepo.getCreator().getEmail().equals(userEmail)){
             throw new IllegalArgumentException("Creator 아님!");
         }
