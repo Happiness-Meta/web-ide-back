@@ -18,11 +18,14 @@ import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.exception.IsNotUserInviteRepo;
 import org.meta.happiness.webide.exception.RepoNotFoudException;
 import org.meta.happiness.webide.exception.UserNotFoundException;
+import org.meta.happiness.webide.repository.filemetadata.FileMetaDataRepository;
 import org.meta.happiness.webide.repository.repo.S3RepoRepository;
 import org.meta.happiness.webide.repository.user.UserRepository;
 import org.meta.happiness.webide.repository.userrepo.UserRepoRepository;
 import org.meta.happiness.webide.repository.repo.RepoRepository;
 import org.meta.happiness.webide.security.JwtUtil;
+import org.meta.happiness.webide.service.file.FileService;
+import org.meta.happiness.webide.service.file.S3FileService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,8 +43,12 @@ public class RepoService {
     private final RepoRepository repoRepository;
     private final UserRepoRepository userRepoRepository;
 
+    private final S3FileService s3FileService;
     private final S3RepoService s3RepoService;
     private final S3RepoRepository s3RepoRepository;
+
+    private final FileService fileService;
+    private final FileMetaDataRepository fileMetaDataRepository;
 
     private final JwtUtil jwtUtil;
 
@@ -67,6 +74,13 @@ public class RepoService {
         s3RepoService.createRepository(
                 createRepoPathPrefix(savedRepo.getId())
         );
+
+        fileService.createFile(savedRepo.getId(), "README.md");
+        FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(savedRepo, "README.md")
+                .orElseThrow(() -> new IllegalArgumentException("path 오류"));
+
+        s3FileService.updateFile(savedRepo.getId(), fileMetaData.getId(), "# Hello! This is README");
+
 
         return RepoResponseDto.builder()
                 .id(savedRepo.getId())
