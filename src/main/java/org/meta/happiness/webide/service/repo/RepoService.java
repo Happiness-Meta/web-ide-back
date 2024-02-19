@@ -26,6 +26,7 @@ import org.meta.happiness.webide.security.JwtUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -210,9 +211,9 @@ public class RepoService {
         List<FileMetaData> s3files = targetRepo.getS3fileMetadata();
 
         if(s3files.isEmpty()){
-            return RepoGetAllFilesResponse.builder()
-                    .fileData(null)
-                    .treeData(null)
+            RepoGetAllFilesResponse.builder()
+                    .fileData(Collections.emptyList())
+                    .treeData(RepoTreeResponse.builder().build())
                     .build();
         }
 
