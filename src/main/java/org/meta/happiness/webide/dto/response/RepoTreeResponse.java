@@ -24,6 +24,8 @@ public class RepoTreeResponse {
     private String name;
     private List<RepoTreeResponse> children;
 
+    private String uuid;
+
 
     private String content;
 
@@ -42,21 +44,22 @@ public class RepoTreeResponse {
     }
 
     @Builder
-    public RepoTreeResponse(int id, String key, String name, String content) {
+    public RepoTreeResponse(int id, String key, String name, String content, String uuid) {
         this.id = id;
         this.key = key;
         this.name = name;
         this.content = content;
+        this.uuid = uuid;
         this.children = new ArrayList<>();
     }
 
-    public RepoTreeResponse findOrCreateChild(int id, String fullKey, String name, String content) {
+    public RepoTreeResponse findOrCreateChild(int id, String fullKey, String name, String content, String uuid) {
         for (RepoTreeResponse child : children) {
             if (child.name.equals(name)) {
                 return child;
             }
         }
-        RepoTreeResponse newNode = new RepoTreeResponse(id, fullKey, name, content);
+        RepoTreeResponse newNode = new RepoTreeResponse(id, fullKey, name, content, uuid);
         children.add(newNode);
         return newNode;
     }
@@ -78,12 +81,12 @@ public class RepoTreeResponse {
                 String part = parts[i];
                 if (part.isEmpty()) continue;
 
-                String accumulatedKey = DELIMITER + String.join(DELIMITER, java.util.Arrays.copyOfRange(parts, 1, i + 1));
+                String accumulatedKey = DELIMITER + String.join(DELIMITER, java.util.Arrays.copyOfRange(parts, 0, i + 1));
                 if (!accumulatedKey.contains(EXTENSION_SEPARATOR))
                     accumulatedKey += DELIMITER;
 
                 c++;
-                currentNode = currentNode.findOrCreateChild(c, accumulatedKey, part, file.getContent());
+                currentNode = currentNode.findOrCreateChild(c, accumulatedKey, part, file.getContent(), file.getUuid());
             }
         }
 

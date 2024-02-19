@@ -20,8 +20,7 @@ public interface UserRepoRepository extends JpaRepository<UserRepo, Long> {
 
     boolean existsByRepoAndUser(Repo repo, User findUser);
 
-//    @Query("select u from User r join r.userRepoUsers ur where ur.user = : user")
-//    List<UserRepo> findAllUserByRepo(@Param("repo") Optional<Repo> repo);
+    List<UserRepo> findAllUserByRepo(@Param("repo") Optional<Repo> repo);
 
 
 //    @Query(value = "SELECT * FROM user_repo ORDER BY repo_last_modified_date DESC LIMIT 2", nativeQuery = true)

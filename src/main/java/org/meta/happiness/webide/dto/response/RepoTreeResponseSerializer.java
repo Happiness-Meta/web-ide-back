@@ -31,6 +31,7 @@ public class RepoTreeResponseSerializer extends JsonSerializer<RepoTreeResponse>
         } else {
             if (value.getContent() != null) {
                 gen.writeStringField("content", value.getContent());
+                gen.writeStringField("uuid", value.getUuid());
             }
         }
 
