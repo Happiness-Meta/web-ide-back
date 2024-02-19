@@ -1,6 +1,7 @@
 package org.meta.happiness.webide.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.dto.user.*;
 import org.meta.happiness.webide.entity.user.User;
 import org.meta.happiness.webide.exception.ExistAccountException;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -29,6 +31,8 @@ public class UserService {
         validateDuplicatedUser(form.getEmail(), form.getNickname());
         User user = User.createUser(form, passwordEncoder.encode(form.getPassword()),null);
         User savedUser = userRepository.save(user);
+        log.info("user={}", savedUser);
+
         return new UserResponseDto(savedUser.getId(),savedUser.getNickname(),
                 savedUser.getEmail(),savedUser.getCreatedDate(),savedUser.getLastModifiedDate());
     }
@@ -48,7 +52,7 @@ public class UserService {
         if (!passwordEncoder.matches(form.getPassword(), user.getPassword())) {
             throw new LoginFailureException();
         }
-        return new UserLoginResponseDto(user.getEmail(), user.getNickname(),
+        return new UserLoginResponseDto(user.getId(), user.getEmail(), user.getNickname(),
                 jwtUtil.generateToken(user.getEmail()) /*jwtUtil.refreshToken(user.getEmail())*/
         );
     }
@@ -64,14 +68,19 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    public UserResponseDto findUserEmail(String userEmail) {
+        return UserResponseDto.convertUserToDto(userRepository.findByEmail(userEmail).orElseThrow(UserNotFoundException::new));
+    }
+
     public UserResponseDto findUser(Long userId) {
         return UserResponseDto.convertUserToDto(userRepository.findById(userId).orElseThrow(UserNotFoundException::new));
     }
     //유저 정보 변경
     @Transactional
-    public UserResponseDto updateUser(Long userId, UserUpdateDto request) {
+    public UserResponseDto updateUser(String userEmail, UserUpdateDto request) {
+        User findUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
         validateDuplicatedNickname(request.getNickname());
-        User findUser = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         findUser.changeNickname(request.getNickname());
         findUser.changePassword(passwordEncoder.encode(request.getPassword()));
         return UserResponseDto.convertUserToDto(findUser);
@@ -94,7 +103,7 @@ public class UserService {
         boolean checkValid = jwtUtil.isTokenValid(token);
         if (checkValid) {
             user.changeRefreshToken(jwtUtil.generateRefreshToken(user.getEmail()));
-            return new UserLoginResponseDto(user.getEmail(), user.getNickname(), user.getRefreshToken());
+            return new UserLoginResponseDto(user.getId(), user.getEmail(), user.getNickname(), user.getRefreshToken());
         }else{
             throw new RefreshTokenException();
         }

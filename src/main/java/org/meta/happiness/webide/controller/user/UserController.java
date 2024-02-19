@@ -9,8 +9,10 @@ import org.meta.happiness.webide.dto.user.*;
 import org.meta.happiness.webide.exception.EmailPatternException;
 import org.meta.happiness.webide.exception.PasswordPatternException;
 import org.meta.happiness.webide.security.JwtUtil;
+import org.meta.happiness.webide.security.UserDetailsImpl;
 import org.meta.happiness.webide.service.ResponseService;
 import org.meta.happiness.webide.service.UserService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +40,14 @@ public class UserController {
         return responseService.handleSingleResult(userService.registerUser(form));
     }
 
+    @GetMapping("/user")
+    public SingleResult<UserResponseDto> checkUser(
+            @AuthenticationPrincipal UserDetailsImpl user
+            ){
+
+        return responseService.handleSingleResult(userService.findUserEmail(user.getUsername()));
+    }
+
 
     //로그인
     @PostMapping("/sign/login")
@@ -55,10 +65,11 @@ public class UserController {
         return responseService.handleSingleResult(userService.findUser(userId));
     }
     //회원 정보 수정
-    @PutMapping("/user/{id}")
-    public SingleResult<UserResponseDto> updateUser(@PathVariable("id") Long userId,
-                                                    @RequestBody UserUpdateDto request) {
-        return responseService.handleSingleResult(userService.updateUser(userId, request));
+    @PutMapping("/user")
+    public SingleResult<UserResponseDto> updateUser(
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @RequestBody UserUpdateDto request) {
+        return responseService.handleSingleResult(userService.updateUser(user.getUsername(), request));
     }
     //회원 삭제
     @DeleteMapping("/user/{id}")
