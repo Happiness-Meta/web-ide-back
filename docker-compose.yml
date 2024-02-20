@@ -10,6 +10,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d
 
   application:
+    image: jaeseonyang/spring-web-ide:web-ide
     container_name: spring-web-ide
     build:
       context: ./

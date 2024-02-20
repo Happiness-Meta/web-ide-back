@@ -1,11 +1,10 @@
 package org.meta.happiness.webide.chat.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
 @Builder
 @Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatMessageResponseDto {
