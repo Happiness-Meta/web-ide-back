@@ -40,29 +40,34 @@ public class ChatService {
     // 채팅방 입장(레포당 채팅 룸은 한개씩 있기에, 사실상 레포 입장과 동일하다)
     public void enterRoom(String repoId, ChatMessageRequestDto chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         // 현재 실행 중인 웹소켓 세션 헤더에 사용자 이름 넣기.
-        headerAccessor.getSessionAttributes().put("username", chatMessage.getSender());
+        headerAccessor.getSessionAttributes().put("userName", chatMessage.getSender());
+        headerAccessor.getSessionAttributes().put("repoId", repoId);
+        log.info("입장할 때 레포 아이디는 {}", repoId);
+        log.info("입장할 때 채팅 메시지는 {}", chatMessage);
         log.info("{}가 입장", chatMessage.getSender());
     }
 
-    public void saveAndSendMessage(ChatMessageRequestDto message) {
-        sendMessage(message);
-        saveMessage(message);
+    public void saveAndSendMessage(ChatMessageRequestDto message, String repoId) {
+        log.info("메시지 보낼 때 레포 아이디는 {}", repoId);
+        log.info("메시지 보낼 때 채팅 메시지는 {}", message.getContent());
+        sendMessage(message, repoId);
+        saveMessage(message, repoId);
     }
 
-    // 메시지 전송
-    private void sendMessage(ChatMessageRequestDto message) {
+    // 메시지 전송 todo: 지금 여기서 문제가 있는 것 같다. 메시지를 전송해주고 있지 않아. enter에서는 어떻게 메시지를 보내주고 있지?
+    private void sendMessage(ChatMessageRequestDto message, String repoId) {
         log.info("메시진 발신자: {}", message.getSender());
         log.info("메시지 내용: {}", message.getContent());
-
-        messagingTemplate.convertAndSend("sub/repo/" + message.getRepoId(), message);
+        messagingTemplate.convertAndSend("sub/repo/" + repoId, message);
+        log.info("메시지 변형하고 보내기 완료");
     }
 
     // 메시지 저장
-    private void saveMessage(ChatMessageRequestDto message) {
-        log.info("저장될 메시지: {}", message);
+    private void saveMessage(ChatMessageRequestDto message, String repoId) {
+        log.info("저장될 메시지: {}", message.getContent());
         User user = userRepository.findByNickname(message.getSender())
                 .orElseThrow(UserNotFoundException::new);
-        Repo repo = repoRepository.findById(message.getRepoId())
+        Repo repo = repoRepository.findById(repoId)
                 .orElseThrow(RepoNotFoundException::new);
         UserRepo userRepo = userRepoRepository.findByUserAndRepo(user, repo)
                 .orElseThrow(UserRepoNotFoundException::new);
@@ -102,15 +107,18 @@ public class ChatService {
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        String username = (String) headerAccessor.getSessionAttributes().get("username");
-        if (username != null) {
-            log.info("채팅 퇴장: {}", username);
-            var chatMessage = ChatMessageResponseDto.builder()
+        String userName = (String) headerAccessor.getSessionAttributes().get("userName");
+        String repoId = (String) headerAccessor.getSessionAttributes().get("repoId");
+        if (userName != null) {
+            log.info("채팅 퇴장: {}", userName);
+            ChatMessageResponseDto chatMessage = ChatMessageResponseDto.builder()
                     .type(ChatMessageType.LEAVE)
-                    .sender(username)
+                    .sender(userName)
                     .content("")
                     .build();
-            messagingTemplate.convertAndSend("/sub/public", chatMessage);
+            messagingTemplate.convertAndSend("sub/repo/" + repoId, chatMessage);
         }
     }
+
+
 }

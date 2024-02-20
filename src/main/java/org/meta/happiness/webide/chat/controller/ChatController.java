@@ -40,10 +40,10 @@ public class ChatController {
     ) {
         // 현재 실행 중인 웹소켓 세션에 사용자 이름 넣기.
         // todo: 클라이언트에서 메시지를 받은 뒤에 어떻게 처리하는지 확인 필요
+
         chatService.enterRoom(repoId, chatMessage, headerAccessor);
         return chatMessage;
     }
-
     // 메시지를 보낼 때마다 실행
     /*
     * 아래 경로로 메시지 정보가 들어온다
@@ -53,9 +53,11 @@ public class ChatController {
     @SendTo("sub/repo/{repoId}")
     public ChatMessageRequestDto sendMessage(
             @DestinationVariable String repoId,
-            @Payload ChatMessageRequestDto chatMessage
+            @Payload ChatMessageRequestDto chatMessage,
+            SimpMessageHeaderAccessor headerAccessor
     ) {
-        chatService.saveAndSendMessage(chatMessage);
+//        chatService.sendMessage(repoId, chatMessage, headerAccessor);
+        chatService.saveAndSendMessage(chatMessage, repoId);
         return chatMessage;
     }
 
