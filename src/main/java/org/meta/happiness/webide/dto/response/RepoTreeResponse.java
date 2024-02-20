@@ -1,6 +1,5 @@
 package org.meta.happiness.webide.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -26,8 +25,9 @@ public class RepoTreeResponse {
 
     private String uuid;
 
-
     private String content;
+    private String type;
+    private String parentId;
 
     public RepoTreeResponse(int id, String key, String name) {
         this.id = id;
@@ -53,13 +53,23 @@ public class RepoTreeResponse {
         this.children = new ArrayList<>();
     }
 
-    public RepoTreeResponse findOrCreateChild(int id, String fullKey, String name, String content, String uuid) {
+    public RepoTreeResponse(int id, String fullKey, String name, String content, String uuid, String parentId) {
+        this.id = id;
+        this.name = name;
+        this.key = fullKey;
+        this.content = content;
+        this.uuid = uuid;
+        this.parentId = parentId;
+        this.children = new ArrayList<>();
+    }
+
+    public RepoTreeResponse findOrCreateChild(int id,String fullKey, String name, String content, String uuid, String parentId) {
         for (RepoTreeResponse child : children) {
             if (child.name.equals(name)) {
                 return child;
             }
         }
-        RepoTreeResponse newNode = new RepoTreeResponse(id, fullKey, name, content, uuid);
+        RepoTreeResponse newNode = new RepoTreeResponse(id, fullKey, name, content, uuid, parentId);
         children.add(newNode);
         return newNode;
     }
@@ -86,7 +96,9 @@ public class RepoTreeResponse {
                     accumulatedKey += DELIMITER;
 
                 c++;
-                currentNode = currentNode.findOrCreateChild(c, accumulatedKey, part, file.getContent(), file.getUuid());
+//                currentNode = currentNode.findOrCreateChild(c, accumulatedKey, part, file.getContent(), file.getUuid());
+                String parentId = String.valueOf(currentNode.getId()); // 현재 노드의 id를 부모 id로 사용
+                currentNode = currentNode.findOrCreateChild(c, accumulatedKey, part, file.getContent(), file.getUuid(), parentId);
             }
         }
 

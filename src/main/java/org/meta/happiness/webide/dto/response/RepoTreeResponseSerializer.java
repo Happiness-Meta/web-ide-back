@@ -19,8 +19,10 @@ public class RepoTreeResponseSerializer extends JsonSerializer<RepoTreeResponse>
         gen.writeStringField("id", String.valueOf(value.getId()));
         gen.writeStringField("key", value.getKey());
         gen.writeStringField("name", value.getName());
+        gen.writeStringField("parentId", value.getParentId());
 
         if (!value.getName().contains(EXTENSION_SEPARATOR)) {
+            gen.writeStringField("type", "internal");
             gen.writeFieldName("children");
             gen.writeStartArray();
 
@@ -32,9 +34,9 @@ public class RepoTreeResponseSerializer extends JsonSerializer<RepoTreeResponse>
             if (value.getContent() != null) {
                 gen.writeStringField("content", value.getContent());
                 gen.writeStringField("uuid", value.getUuid());
+                gen.writeStringField("type", "leaf");
             }
         }
-
         gen.writeEndObject();
     }
 }
