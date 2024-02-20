@@ -3,12 +3,10 @@ package org.meta.happiness.webide.service.repo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.meta.happiness.webide.dto.S3ObjectAndContent;
 import org.meta.happiness.webide.dto.file.FileDto;
-import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
-import org.meta.happiness.webide.dto.repo.RepoInviteResponseDto;
+import org.meta.happiness.webide.dto.repo.*;
 
-import org.meta.happiness.webide.dto.repo.RepoResponseDto;
-import org.meta.happiness.webide.dto.repo.RepoUpdateNameRequestDto;
 import org.meta.happiness.webide.dto.response.RepoGetAllFilesResponse;
 import org.meta.happiness.webide.dto.response.RepoTreeResponse;
 import org.meta.happiness.webide.entity.FileMetaData;
@@ -28,6 +26,7 @@ import org.meta.happiness.webide.service.file.FileService;
 import org.meta.happiness.webide.service.file.S3FileService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.util.Collections;
 import java.util.List;
@@ -269,4 +268,41 @@ public class RepoService {
         return RepoInviteResponseDto.convertRepoToInvite(findRepo);
     }
 
+    @Transactional
+    public RepoResponseDto createTemplateRepository(RepoTemplateCreateRequestDto request, String userEmail) {
+        User creator = userRepository.findByEmail(userEmail)
+                .orElseThrow(UserNotFoundException::new);
+
+        Repo repo = Repo.createRepo(request, creator);
+        Repo savedRepo = repoRepository.save(repo);
+
+        UserRepo userRepo = UserRepo.addUserRepo(repo, creator);
+        log.info("saved repo >>>>>> {}", savedRepo.getId());
+
+        s3RepoService.createRepository(
+                createRepoPathPrefix(savedRepo.getId())
+        );
+
+        List<S3ObjectAndContent> templateFiles = s3RepoRepository.getTemplateFiles();
+        for (S3ObjectAndContent templateFile : templateFiles) {
+//            log.info("s3 >>> {}", templateFile.getS3Object().toString());
+//            log.info("s3 contents >>> {}", templateFile.getContent());
+            String key = templateFile.getS3Object().key().split(DELIMITER)[1];
+            log.info("s3 key remove root todo/ >>> {}", key);
+
+            fileService.createFile(savedRepo.getId(), key);
+            FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(savedRepo, key)
+                    .orElseThrow(() -> new IllegalArgumentException("path 오류"));
+
+            s3FileService.updateFile(savedRepo.getId(), fileMetaData.getId(), templateFile.getContent());
+        }
+
+        return RepoResponseDto.builder()
+                .id(savedRepo.getId())
+                .name(savedRepo.getName())
+                .programmingLanguage(savedRepo.getProgrammingLanguage())
+                .createdAt(savedRepo.getCreatedDate())
+                .modifiedAt(savedRepo.getLastModifiedDate())
+                .build();
+    }
 }
