@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.meta.happiness.webide.dto.repo.RepoCreateRequestDto;
+import org.meta.happiness.webide.dto.repo.RepoTemplateCreateRequestDto;
 import org.meta.happiness.webide.entity.BaseTimeEntity;
 import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.user.User;
@@ -45,6 +46,16 @@ public class Repo extends BaseTimeEntity {
         repo.id = UUID.randomUUID().toString();
         repo.creator = creator;
         repo.programmingLanguage = request.getProgrammingLanguage();
+        repo.name = request.getName();
+        repo.password = createPassword(repo);
+        return repo;
+    }
+
+    public static Repo createRepo(RepoTemplateCreateRequestDto request, User creator) {
+        Repo repo = new Repo();
+        repo.id = UUID.randomUUID().toString();
+        repo.creator = creator;
+        repo.programmingLanguage = Language.JAVASCRIPT;
         repo.name = request.getName();
         repo.password = createPassword(repo);
         return repo;

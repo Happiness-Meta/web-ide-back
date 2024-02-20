@@ -36,6 +36,15 @@ public class ReposController {
         return responseService.handleSingleResult(repoService.createRepository(request, user.getUsername()));
     }
 
+    @PostMapping("/template")
+    @Operation(summary = "신규 탬플릿 레포지토리 생성", description = "")
+    public SingleResult<?> createTemplateRepository(
+            @RequestBody RepoTemplateCreateRequestDto request,
+            @AuthenticationPrincipal UserDetailsImpl user
+    ) {
+        return responseService.handleSingleResult(repoService.createTemplateRepository(request, user.getUsername()));
+    }
+
     //TODO: 지금은 creator만 조회가 가능하다.
     @GetMapping("/{repoId}")
     @Operation(summary = "개별 레포지토리 조회", description = "")
