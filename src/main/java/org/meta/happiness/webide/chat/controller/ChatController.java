@@ -50,14 +50,15 @@ public class ChatController {
     * 특정 채팅방 경로에 메시지를 뿌려준다
     * */
     @MessageMapping("/chat/send/{repoId}")
-    @SendTo("sub/repo/{repoId}")
+    @SendTo("/sub/repo/{repoId}")
     public ChatMessageRequestDto sendMessage(
             @DestinationVariable String repoId,
             @Payload ChatMessageRequestDto chatMessage,
             SimpMessageHeaderAccessor headerAccessor
     ) {
 //        chatService.sendMessage(repoId, chatMessage, headerAccessor);
-        chatService.saveAndSendMessage(chatMessage, repoId);
+        chatService.saveMessage(chatMessage, repoId);
+        chatService.sendMessage(chatMessage, repoId);
         return chatMessage;
     }
 

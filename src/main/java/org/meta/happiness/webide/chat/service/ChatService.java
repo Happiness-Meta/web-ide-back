@@ -47,15 +47,15 @@ public class ChatService {
         log.info("{}가 입장", chatMessage.getSender());
     }
 
-    public void saveAndSendMessage(ChatMessageRequestDto message, String repoId) {
-        log.info("메시지 보낼 때 레포 아이디는 {}", repoId);
-        log.info("메시지 보낼 때 채팅 메시지는 {}", message.getContent());
-        sendMessage(message, repoId);
-        saveMessage(message, repoId);
-    }
+//    public void saveAndSendMessage(ChatMessageRequestDto message, String repoId) {
+//        log.info("메시지 보낼 때 레포 아이디는 {}", repoId);
+//        log.info("메시지 보낼 때 채팅 메시지는 {}", message.getContent());
+//        sendMessage(message, repoId);
+//        saveMessage(message, repoId);
+//    }
 
     // 메시지 전송 todo: 지금 여기서 문제가 있는 것 같다. 메시지를 전송해주고 있지 않아. enter에서는 어떻게 메시지를 보내주고 있지?
-    private void sendMessage(ChatMessageRequestDto message, String repoId) {
+    public void sendMessage(ChatMessageRequestDto message, String repoId) {
         log.info("메시진 발신자: {}", message.getSender());
         log.info("메시지 내용: {}", message.getContent());
         messagingTemplate.convertAndSend("sub/repo/" + repoId, message);
@@ -63,7 +63,7 @@ public class ChatService {
     }
 
     // 메시지 저장
-    private void saveMessage(ChatMessageRequestDto message, String repoId) {
+    public void saveMessage(ChatMessageRequestDto message, String repoId) {
         log.info("저장될 메시지: {}", message.getContent());
         User user = userRepository.findByNickname(message.getSender())
                 .orElseThrow(UserNotFoundException::new);
