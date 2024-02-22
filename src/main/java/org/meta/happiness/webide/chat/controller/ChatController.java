@@ -13,6 +13,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/chat")
 public class ChatController {
 
     private final ChatService chatService;
@@ -63,7 +65,7 @@ public class ChatController {
     }
 
     //레포 안의 전체 메시지 불러오기 <- 프론트에서 이전 메시지 불러오는 기능으로 사용되어야 함.
-    @GetMapping("/chat/{repoId}/messages")
+    @GetMapping("/{repoId}/messages")
     public ApiResponse<?> getMessagesInRepo(@PathVariable String repoId) {
         List<ChatMessageResponseDto> responseData = chatService.getMessagesInRepo(repoId);
         return ApiResponse.ok(responseData);
