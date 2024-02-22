@@ -12,6 +12,7 @@ import org.meta.happiness.webide.entity.userrepo.UserRepo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @Entity
@@ -62,7 +63,21 @@ public class Repo extends BaseTimeEntity {
     }
 
     private static String createPassword(Repo repo) {
-        return repo.id.substring(9, 13);
+        String repoId = String.valueOf(repo.id);
+        String tempPassword = repoId.replace("-", "");
+        return getRandomFourPassword(tempPassword);
+    }
+
+    private static String getRandomFourPassword(String tempPassword) {
+        Random random = new Random();
+        StringBuilder result = new StringBuilder();
+        int length = tempPassword.length();
+
+        for (int i = 0; i < 4; i++) {
+            int randomIndex = random.nextInt(length);
+            result.append(tempPassword.charAt(randomIndex));
+        }
+        return result.toString();
     }
 
     public void changeName(String name){
