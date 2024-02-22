@@ -277,6 +277,7 @@ public class RepoService {
         Repo savedRepo = repoRepository.save(repo);
 
         UserRepo userRepo = UserRepo.addUserRepo(repo, creator);
+        UserRepo savedUserRepo = userRepoRepository.save(userRepo);
         log.info("saved repo >>>>>> {}", savedRepo.getId());
 
         s3RepoService.createRepository(
