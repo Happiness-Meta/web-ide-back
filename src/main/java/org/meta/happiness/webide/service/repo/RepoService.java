@@ -189,7 +189,7 @@ public class RepoService {
                 .map(userRepo -> {
                     Repo repo = userRepo.getRepo();
                     log.info("repo name >>> {}", repo.getName());
-                    return new RepoResponseDto(repo.getId(), new UserCreatorDto(repo.getCreator().getEmail()),
+                    return new RepoResponseDto(repo.getId(), new UserCreatorDto(repo.getCreator().getNickname()),
                             repo.getName(), repo.getProgrammingLanguage(),
                             repo.getCreatedDate(), repo.getLastModifiedDate());
                 })
