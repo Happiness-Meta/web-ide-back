@@ -9,6 +9,7 @@ import org.meta.happiness.webide.dto.repo.*;
 
 import org.meta.happiness.webide.dto.response.RepoGetAllFilesResponse;
 import org.meta.happiness.webide.dto.response.RepoTreeResponse;
+import org.meta.happiness.webide.dto.user.UserCreatorDto;
 import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
@@ -188,7 +189,7 @@ public class RepoService {
                 .map(userRepo -> {
                     Repo repo = userRepo.getRepo();
                     log.info("repo name >>> {}", repo.getName());
-                    return new RepoResponseDto(repo.getId(), repo.getCreator(),
+                    return new RepoResponseDto(repo.getId(), new UserCreatorDto(repo.getCreator().getEmail()),
                             repo.getName(), repo.getProgrammingLanguage(),
                             repo.getCreatedDate(), repo.getLastModifiedDate());
                 })
