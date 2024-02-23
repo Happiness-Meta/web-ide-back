@@ -1,5 +1,6 @@
 package org.meta.happiness.webide.chat.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.meta.happiness.webide.chat.dto.ChatMessageRequestDto;
@@ -21,6 +22,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Chat", description = "채팅 관련 API")
 @RequestMapping("/api/chat")
 public class ChatController {
 
