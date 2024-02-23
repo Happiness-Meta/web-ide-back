@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.meta.happiness.webide.dto.user.UserCreatorDto;
 import org.meta.happiness.webide.entity.repo.Language;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
@@ -18,8 +19,7 @@ import java.time.LocalDateTime;
 @Builder
 public class RepoResponseDto {
     private String id;
-    @JsonIgnore
-    private User createId;
+    private UserCreatorDto creatorDto;
     private String name;
     private Language programmingLanguage;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
@@ -29,7 +29,7 @@ public class RepoResponseDto {
 
     public static RepoResponseDto convertRepoToDto(Repo repo){
         return new RepoResponseDto(repo.getId(),
-                repo.getCreator(),
+                new UserCreatorDto(repo.getCreator().getEmail()),
                 repo.getName(),
                 repo.getProgrammingLanguage(),
                 repo.getCreatedDate(),
