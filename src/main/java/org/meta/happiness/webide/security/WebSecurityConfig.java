@@ -39,6 +39,7 @@ public class WebSecurityConfig {
                 //HttpServletRequest를 사용하는 요청들에 대한 접근제한을 설정하겠다.
                 .authorizeHttpRequests((authorize) ->
                         authorize
+                                .requestMatchers("/api/run").permitAll()
                                 .requestMatchers("/ws/**", "/sub/**", "/pub/**").permitAll()
                                 .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/posts", "/api/post/*", "/api/users", "/api/replies", "/api/replies/*", "/api/reply/*").permitAll()
