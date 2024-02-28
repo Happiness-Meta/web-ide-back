@@ -9,7 +9,7 @@ import org.meta.happiness.webide.dto.repo.*;
 import org.meta.happiness.webide.dto.response.MultipleResult;
 import org.meta.happiness.webide.dto.response.Result;
 import org.meta.happiness.webide.dto.response.SingleResult;
-import org.meta.happiness.webide.security.UserDetailsImpl;
+import org.meta.happiness.webide.common.security.UserDetailsImpl;
 import org.meta.happiness.webide.service.ResponseService;
 import org.meta.happiness.webide.service.repo.RepoService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
