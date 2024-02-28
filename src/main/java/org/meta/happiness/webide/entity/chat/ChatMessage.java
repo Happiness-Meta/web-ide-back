@@ -15,7 +15,8 @@ import org.meta.happiness.webide.entity.userrepo.UserRepo;
 @NoArgsConstructor
 public class ChatMessage extends BaseTimeEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //db 에서 생성하고 가지고 있음.
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "chat_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
