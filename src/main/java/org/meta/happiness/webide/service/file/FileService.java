@@ -2,6 +2,8 @@ package org.meta.happiness.webide.service.file;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.meta.happiness.webide.common.exception.FileMetaDataPathException;
+import org.meta.happiness.webide.common.exception.RepoNotFoundException;
 import org.meta.happiness.webide.dto.file.UpdateFileRequest;
 import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.repo.Repo;
@@ -26,12 +28,12 @@ public class FileService {
 
     public void createFile(String repoId, String filePath) {
         Repo repo = repoRepository.findById(repoId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포지토리입니다."));
+                .orElseThrow(RepoNotFoundException::new);
 
         fileMetaDataService.setPath(repo, filePath);
 
         FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(repo, filePath)
-                .orElseThrow(() -> new IllegalArgumentException("path 오류"));
+                .orElseThrow(FileMetaDataPathException::new);
         log.info("saved file path >>>>> {}", fileMetaData.getPath());
 
         s3fileService.createFilePath(repo.getId(), fileMetaData.getId());
@@ -40,10 +42,10 @@ public class FileService {
     @Transactional
     public void updateFile(String repoId, UpdateFileRequest request) {
         Repo repo = repoRepository.findById(repoId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포지토리입니다."));
+                .orElseThrow(RepoNotFoundException::new);
 
         FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(repo, request.getOriginFilepath())
-                .orElseThrow(() -> new IllegalArgumentException("path 오류"));
+                .orElseThrow(FileMetaDataPathException::new);
         fileMetaData = fileMetaData.changePath(request.getNewFilepath());
 
         log.info("update file originPath >>>>> {}", request.getOriginFilepath());
@@ -55,10 +57,10 @@ public class FileService {
 
     public void deleteFile(String repoId, String filePath) {
         Repo repo = repoRepository.findById(repoId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포지토리입니다."));
+                .orElseThrow(RepoNotFoundException::new);
 
         FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(repo, filePath)
-                .orElseThrow(() -> new IllegalArgumentException("path 오류"));
+                .orElseThrow(FileMetaDataPathException::new);
         log.info("delete file path >>>>> {}", fileMetaData.getPath());
 
         fileMetaDataService.deletePath(repo, filePath);

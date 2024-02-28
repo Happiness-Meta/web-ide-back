@@ -3,6 +3,7 @@ package org.meta.happiness.webide.service.repo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.meta.happiness.webide.common.exception.*;
 import org.meta.happiness.webide.dto.S3ObjectAndContent;
 import org.meta.happiness.webide.dto.file.FileDto;
 import org.meta.happiness.webide.dto.repo.*;
@@ -14,15 +15,11 @@ import org.meta.happiness.webide.entity.FileMetaData;
 import org.meta.happiness.webide.entity.userrepo.UserRepo;
 import org.meta.happiness.webide.entity.repo.Repo;
 import org.meta.happiness.webide.entity.user.User;
-import org.meta.happiness.webide.common.exception.IsNotUserInviteRepo;
-import org.meta.happiness.webide.common.exception.RepoNotFoundException;
-import org.meta.happiness.webide.common.exception.UserNotFoundException;
 import org.meta.happiness.webide.repository.filemetadata.FileMetaDataRepository;
 import org.meta.happiness.webide.repository.repo.S3RepoRepository;
 import org.meta.happiness.webide.repository.user.UserRepository;
 import org.meta.happiness.webide.repository.userrepo.UserRepoRepository;
 import org.meta.happiness.webide.repository.repo.RepoRepository;
-import org.meta.happiness.webide.common.security.jwt.JwtUtil;
 import org.meta.happiness.webide.service.file.FileService;
 import org.meta.happiness.webide.service.file.S3FileService;
 import org.springframework.stereotype.Service;
@@ -40,15 +37,12 @@ public class RepoService {
     private final UserRepository userRepository;
     private final RepoRepository repoRepository;
     private final UserRepoRepository userRepoRepository;
-
     private final S3FileService s3FileService;
     private final S3RepoService s3RepoService;
     private final S3RepoRepository s3RepoRepository;
-
     private final FileService fileService;
     private final FileMetaDataRepository fileMetaDataRepository;
 
-    private final JwtUtil jwtUtil;
 
     public static final String DELIMITER = "/";
 
@@ -75,7 +69,7 @@ public class RepoService {
 
         fileService.createFile(savedRepo.getId(), "README.md");
         FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(savedRepo, "README.md")
-                .orElseThrow(() -> new IllegalArgumentException("path 오류"));
+                .orElseThrow(FileMetaDataPathException::new);
 
         s3FileService.updateFile(savedRepo.getId(), fileMetaData.getId(), "# Hello! This is README");
 
@@ -100,7 +94,7 @@ public class RepoService {
         Repo findRepo = repoRepository.findById(repoId)
                 .orElseThrow(RepoNotFoundException::new);
 
-        if(!userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
+        if (!userRepoRepository.existsByRepoAndUser(findRepo, findUser)) {
             throw new IsNotUserInviteRepo();
         }
 
@@ -108,22 +102,21 @@ public class RepoService {
     }
 
     @Transactional
-    public void invite(String requestPassword, String repoId, String userEmail){
+    public void invite(String requestPassword, String repoId, String userEmail) {
         User findUser = userRepository.findByEmail(userEmail)
                 .orElseThrow(UserNotFoundException::new);
 
         Repo findRepo = repoRepository.findById(repoId)
                 .orElseThrow(RepoNotFoundException::new);
 
-        if(userRepoRepository.existsByRepoAndUser(findRepo, findUser)){
+        if (userRepoRepository.existsByRepoAndUser(findRepo, findUser)) {
             return;
         }
 
-        if(findRepo.getPassword().equals(requestPassword)) {
+        if (findRepo.getPassword().equals(requestPassword)) {
             userRepoRepository.save(UserRepo.addUserRepo(findRepo, findUser));
-        }
-        else {
-            throw new IllegalArgumentException("repo의 비밀번호 불일치..");
+        } else {
+            throw new IsNotUserInviteRepo();
         }
     }
 
@@ -140,10 +133,10 @@ public class RepoService {
                 .orElseThrow(UserNotFoundException::new);
 
         Repo targetRepo = repoRepository.findById(repoId)
-                .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않음"));
+                .orElseThrow(RepoNotFoundException::new);
 
-        if (!targetRepo.getCreator().equals(creator)){
-            throw new IllegalArgumentException("생성자가 아님");
+        if (!targetRepo.getCreator().equals(creator)) {
+            throw new RepositoryCreatorMismatchException();
         }
 
         targetRepo.changeName(request.getUpdatedName());
@@ -156,15 +149,14 @@ public class RepoService {
                 .orElseThrow(UserNotFoundException::new);
 
         Repo repo = repoRepository.findById(repoId)
-                .orElseThrow(() -> new IllegalArgumentException("레포지토리가 존재하지 않습니다."));
+                .orElseThrow(RepoNotFoundException::new);
 
         if (!repo.getCreator().equals(creator)) {
-            throw new IllegalArgumentException("프로젝트 생성자가 아님.");
+            throw new RepositoryCreatorMismatchException();
         }
 
-        UserRepo userRepo = userRepoRepository.findByUserAndRepo(creator, repo).orElseThrow(
-                () -> new IllegalArgumentException("존재하지 않음")
-        );
+        UserRepo userRepo = userRepoRepository.findByUserAndRepo(creator, repo)
+                .orElseThrow(UserRepoNotFoundException::new);
 
         String repositoryPath = createRepoPathPrefix(repo.getId());
         s3RepoService.deleteRepository(
@@ -179,7 +171,7 @@ public class RepoService {
     public List<RepoResponseDto> findAllRepoByUser(String userEmail) {
         // 1. 사용자 ID를 이용하여 해당 사용자를 데이터베이스에서 조회
         User findUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("해당 userId를 찾을 수 없습니다." + userEmail));
+                .orElseThrow(UserNotFoundException::new);
         // 2. 사용자가 참여한 모든 레포지토리를 데이터베이스에서 조회
         List<UserRepo> userRepos = userRepoRepository.findByUser(findUser);
 
@@ -187,7 +179,7 @@ public class RepoService {
         return userRepos.stream()
                 .map(userRepo -> {
                     Repo repo = userRepo.getRepo();
-                    log.info("repo name >>> {}", repo.getName());
+//                    log.info("repo name >>> {}", repo.getName());
                     return new RepoResponseDto(repo.getId(), new UserCreatorDto(repo.getCreator().getNickname()),
                             repo.getName(), repo.getProgrammingLanguage(),
                             repo.getCreatedDate(), repo.getLastModifiedDate());
@@ -217,12 +209,12 @@ public class RepoService {
 //    }
 
     @Transactional
-    public RepoGetAllFilesResponse getAllFilesFromRepo(String repoId){
+    public RepoGetAllFilesResponse getAllFilesFromRepo(String repoId) {
         Repo targetRepo = repoRepository.findById(repoId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 레포"));
+                .orElseThrow(RepoNotFoundException::new);
         List<FileMetaData> s3files = targetRepo.getS3fileMetadata();
 
-        if(s3files.isEmpty()){
+        if (s3files.isEmpty()) {
             RepoGetAllFilesResponse.builder()
                     .fileData(Collections.emptyList())
                     .treeData(RepoTreeResponse.builder().build())
@@ -254,15 +246,13 @@ public class RepoService {
                 .content(s3RepoRepository.getFileContent(repoId, metaData.getId()))
                 .build();
 
-        log.info("?>>>?>>>?>>> {}", fileDto.getFilePath());
-        log.info("?>>>?>>>?>>> {}", fileDto.getContent());
-
         return fileDto;
     }
+
     public RepoInviteResponseDto findRepoInviteInfo(String repoId, String userEmail) {
         Repo findRepo = repoRepository.findById(repoId).orElseThrow(RepoNotFoundException::new);
-        if(!findRepo.getCreator().getEmail().equals(userEmail)){
-            throw new IllegalArgumentException("Creator 아님!");
+        if (!findRepo.getCreator().getEmail().equals(userEmail)) {
+            throw new RepositoryCreatorMismatchException();
         }
 
         return RepoInviteResponseDto.convertRepoToInvite(findRepo);
@@ -286,14 +276,12 @@ public class RepoService {
 
         List<S3ObjectAndContent> templateFiles = s3RepoRepository.getTemplateFiles();
         for (S3ObjectAndContent templateFile : templateFiles) {
-//            log.info("s3 >>> {}", templateFile.getS3Object().toString());
-//            log.info("s3 contents >>> {}", templateFile.getContent());
             String key = templateFile.getS3Object().key().split(DELIMITER)[1];
             log.info("s3 key remove root todo/ >>> {}", key);
 
             fileService.createFile(savedRepo.getId(), key);
             FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(savedRepo, key)
-                    .orElseThrow(() -> new IllegalArgumentException("path 오류"));
+                    .orElseThrow(FileMetaDataPathException::new);
 
             s3FileService.updateFile(savedRepo.getId(), fileMetaData.getId(), templateFile.getContent());
         }
