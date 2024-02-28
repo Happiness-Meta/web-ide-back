@@ -2,6 +2,7 @@ package org.meta.happiness.webide.service.file;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.meta.happiness.webide.common.exception.FileMetaDataNotFoundException;
 import org.meta.happiness.webide.common.exception.FileMetaDataPathException;
 import org.meta.happiness.webide.common.exception.RepoNotFoundException;
 import org.meta.happiness.webide.dto.file.UpdateFileRequest;
@@ -60,7 +61,7 @@ public class FileService {
                 .orElseThrow(RepoNotFoundException::new);
 
         FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(repo, filePath)
-                .orElseThrow(FileMetaDataPathException::new);
+                .orElseThrow(FileMetaDataNotFoundException::new);
         log.info("delete file path >>>>> {}", fileMetaData.getPath());
 
         fileMetaDataService.deletePath(repo, filePath);
