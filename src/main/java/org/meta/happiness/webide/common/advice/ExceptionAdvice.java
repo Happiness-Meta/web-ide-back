@@ -79,6 +79,11 @@ public class ExceptionAdvice {
         return responseService.handleFailResult(400, "파일 메타데이터 정보가 존재하지 않습니다.");
     }
 
+    @ExceptionHandler(RepoNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result repoNotFoundEx(){
+        return responseService.handleFailResult(400, "레포지토리가 존재하지 않음");}
+
     @ExceptionHandler(FileMetaDataPathException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result fileMetadataPathErr(){
