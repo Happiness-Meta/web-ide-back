@@ -59,4 +59,40 @@ public class ExceptionAdvice {
     public Result reLoginPlz(){
         return responseService.handleFailResult(400, "다시 로그인 하셔야 합니다.");
     }
+
+
+    @ExceptionHandler(FileAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result fileAlreadyExist(){
+        return responseService.handleFailResult(400, "해당 파일이 이미 존재합니다");
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result fileNotFound(){
+        return responseService.handleFailResult(400, "해당 파일이 존재하지 않습니다");
+    }
+
+    @ExceptionHandler(FileMetaDataNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result fileMetadataNotFound(){
+        return responseService.handleFailResult(400, "파일 메타데이터 정보가 존재하지 않습니다.");
+    }
+
+    @ExceptionHandler(FileMetaDataPathException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result fileMetadataPathErr(){
+        return responseService.handleFailResult(500, "파일 메타데이터 경로 예외가 발생했습니다");}
+
+    @ExceptionHandler(RepositoryCreatorMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result repoNotCreator(){
+        return responseService.handleFailResult(400, "삭제 권한이 없습니다. [생성자 아님]");
+    }
+
+    @ExceptionHandler(S3UploadException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result s3UploadErr(){
+        return responseService.handleFailResult(500, "S3 업로드에 문제가 발생하였습니다.");
+    }
 }
