@@ -2,7 +2,6 @@ package org.meta.happiness.webide.service.file;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.meta.happiness.webide.common.exception.FileMetaDataNotFoundException;
 import org.meta.happiness.webide.common.exception.FileMetaDataPathException;
 import org.meta.happiness.webide.common.exception.RepoNotFoundException;
 import org.meta.happiness.webide.dto.file.UpdateFileRequest;
@@ -20,51 +19,58 @@ import org.springframework.transaction.annotation.Transactional;
 public class FileService {
 
     private final RepoRepository repoRepository;
-
     private final FileMetaDataService fileMetaDataService;
     private final FileMetaDataRepository fileMetaDataRepository;
-
     private final S3FileService s3fileService;
 
-
+    @Transactional
     public void createFile(String repoId, String filePath) {
-        Repo repo = repoRepository.findById(repoId)
-                .orElseThrow(RepoNotFoundException::new);
-
+        Repo repo = findRepoById(repoId);
         fileMetaDataService.setPath(repo, filePath);
+        FileMetaData fileMetaData = getFileMetaData(repo, filePath);
 
-        FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(repo, filePath)
-                .orElseThrow(FileMetaDataPathException::new);
-        log.info("saved file path >>>>> {}", fileMetaData.getPath());
-
-        s3fileService.createFilePath(repo.getId(), fileMetaData.getId());
+        createS3FilePath(repo.getId(), fileMetaData.getId());
+        log.info("파일이 생성되었습니다: {}", filePath);
     }
 
     @Transactional
     public void updateFile(String repoId, UpdateFileRequest request) {
-        Repo repo = repoRepository.findById(repoId)
-                .orElseThrow(RepoNotFoundException::new);
-
-        FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(repo, request.getOriginFilepath())
-                .orElseThrow(FileMetaDataPathException::new);
+        Repo repo = findRepoById(repoId);
+        FileMetaData fileMetaData = getFileMetaData(repo, request.getOriginFilepath());
         fileMetaData = fileMetaData.changePath(request.getNewFilepath());
 
-        log.info("update file originPath >>>>> {}", request.getOriginFilepath());
-        log.info("update file newPath >>>>> {}", fileMetaData.getPath());
-
-        s3fileService.updateFile(repo.getId(), fileMetaData.getId(), request.getContent());
+        updateS3File(repo.getId(), fileMetaData.getId(), request.getContent());
+        log.info("파일이 업데이트되었습니다: {} -> {}", request.getOriginFilepath(), request.getNewFilepath());
     }
 
-
+    @Transactional
     public void deleteFile(String repoId, String filePath) {
-        Repo repo = repoRepository.findById(repoId)
-                .orElseThrow(RepoNotFoundException::new);
+        Repo repo = findRepoById(repoId);
+        FileMetaData fileMetaData = getFileMetaData(repo, filePath);
 
-        FileMetaData fileMetaData = fileMetaDataRepository.findByRepoAndPath(repo, filePath)
-                .orElseThrow(FileMetaDataNotFoundException::new);
-        log.info("delete file path >>>>> {}", fileMetaData.getPath());
+        deleteS3File(repo.getId(), fileMetaData.getId());
+        log.info("파일이 삭제되었습니다: {}", filePath);
+    }
 
-        fileMetaDataService.deletePath(repo, filePath);
-        s3fileService.deleteFile(repo.getId(), fileMetaData.getId());
+    private Repo findRepoById(String repoId) {
+        return repoRepository.findById(repoId)
+                .orElseThrow(() -> new RepoNotFoundException("Repo를 찾을 수 없음"));
+    }
+
+    private FileMetaData getFileMetaData(Repo repo, String filePath) {
+        return fileMetaDataRepository.findByRepoAndPath(repo, filePath)
+                .orElseThrow(() -> new FileMetaDataPathException("파일 메타데이터를 찾을 수 없음"));
+    }
+
+    private void createS3FilePath(String repoId, String fileMetaDataId) {
+        s3fileService.createFilePath(repoId, fileMetaDataId);
+    }
+
+    private void updateS3File(String repoId, String fileMetaDataId, String content) {
+        s3fileService.updateFile(repoId, fileMetaDataId, content);
+    }
+
+    private void deleteS3File(String repoId, String fileMetaDataId) {
+        s3fileService.deleteFile(repoId, fileMetaDataId);
     }
 }

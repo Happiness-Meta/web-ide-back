@@ -59,9 +59,8 @@ public class RepoService {
         Repo savedRepo = repoRepository.save(repo);
 
         UserRepo userRepo = UserRepo.addUserRepo(repo, creator);
-        UserRepo savedUserRepo = userRepoRepository.save(userRepo);
+        userRepoRepository.save(userRepo);
 
-        log.info("saved repo >>>>>> {}", savedRepo.getId());
 
         s3RepoService.createRepository(
                 createRepoPathPrefix(savedRepo.getId())
@@ -267,8 +266,7 @@ public class RepoService {
         Repo savedRepo = repoRepository.save(repo);
 
         UserRepo userRepo = UserRepo.addUserRepo(repo, creator);
-        UserRepo savedUserRepo = userRepoRepository.save(userRepo);
-        log.info("saved repo >>>>>> {}", savedRepo.getId());
+        userRepoRepository.save(userRepo);
 
         s3RepoService.createRepository(
                 createRepoPathPrefix(savedRepo.getId())

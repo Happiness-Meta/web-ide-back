@@ -11,8 +11,8 @@ public class S3RepoService {
 
     private final S3RepoRepository repository;
 
-    public String createRepository(String repoName) {
-        return repository.uploadRepo(repoName).orElseThrow(S3UploadException::new);
+    public void createRepository(String repoName) {
+        repository.uploadRepo(repoName).orElseThrow(S3UploadException::new);
     }
 
     public void deleteRepository(String repositoryPath) {
