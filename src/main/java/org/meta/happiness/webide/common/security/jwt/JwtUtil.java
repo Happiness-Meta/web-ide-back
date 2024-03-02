@@ -27,11 +27,13 @@ public class JwtUtil implements InitializingBean {
     private final UserDetailsServiceImpl userDetailsService;
     private final long REFRESH_TOKEN_VALID_PERIOD = 1000L * 60 * 60;
     private Key key;
+
     //생성자가 하나만 있기때문에 스프링이 자동으로 의존성 주입해주겠죠?
     public JwtUtil(@Value("${jwt.secret}") String secret, UserDetailsServiceImpl detailsService) {
         this.secret = secret;
         this.userDetailsService = detailsService;
     }
+
     //빈이 생성되고 의존성 주입을 받은 후에 secret값을 Base64 Decode해서 Key 변수에 할당하기 위해서
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -40,6 +42,31 @@ public class JwtUtil implements InitializingBean {
     }
 
     //JW Token 생성하기
+    public String[] generateTokens(String email) {
+        Date nowAccess = new Date();
+        Date accessTokenExpireIn = new Date(nowAccess.getTime() + ACCESS_TOKEN_VALID_PERIOD);
+        String accessToken = Jwts.builder()
+                .setClaims(Jwts.claims().setSubject(email))
+                .setIssuedAt(nowAccess)
+                .setExpiration(accessTokenExpireIn)
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+
+        Date nowRefresh = new Date();
+        Date refreshTokenExpireIn = new Date(nowRefresh.getTime() + REFRESH_TOKEN_VALID_PERIOD);
+        String refreshToken = Jwts.builder()
+                //User Email 저장
+                .setClaims(Jwts.claims().setSubject(email))
+                //발행시간 등록
+                .setIssuedAt(nowRefresh)
+                //만료시간 등록
+                .setExpiration(refreshTokenExpireIn)
+                //사용할 암호화 알고리즘과 signature에 들어갈 secret값 setting
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+        return new String[]{accessToken, refreshToken};
+    }
+
     public String generateToken(String email) {
         Date now = new Date();
         Date accessTokenExpireIn = new Date(now.getTime() + ACCESS_TOKEN_VALID_PERIOD);
@@ -49,6 +76,8 @@ public class JwtUtil implements InitializingBean {
                 .setExpiration(accessTokenExpireIn)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
+
+        // refresh 관련된 객체도 생성이 되어야
         return accessToken;
     }
 
@@ -68,8 +97,9 @@ public class JwtUtil implements InitializingBean {
                 .compact();
         return refreshToken;
     }
+
     //jwt에서 인증정보 조회
-    public Authentication getAuthentication(String token){
+    public Authentication getAuthentication(String token) {
         String email = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
         UserDetailsImpl userDetails = userDetailsService.loadUserByUsername(email); //리팩토링해야하는 부분
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());

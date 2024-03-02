@@ -36,7 +36,7 @@ public class UserController {
             throw new EmailPatternException();
         if(bindingResult.hasFieldErrors("password"))
             throw new PasswordPatternException();
-
+        //
         return responseService.handleSingleResult(userService.registerUser(form));
     }
 
